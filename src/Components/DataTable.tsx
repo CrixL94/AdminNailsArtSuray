@@ -1,13 +1,13 @@
-import React from 'react';
-import { DataTable as PrimeDataTable } from 'primereact/datatable';
-import type { DataTableProps as PrimeProps } from 'primereact/datatable';
-import { Column as PrimeColumn } from 'primereact/column';
+import React from "react";
+import { DataTable as PrimeDataTable } from "primereact/datatable";
+import type { DataTableProps as PrimeProps } from "primereact/datatable";
+import { Column as PrimeColumn } from "primereact/column";
 
 interface Column {
   header: string;
-  field: string;
+  field?: string;
   sortable?: boolean;
-  body?: (rowData: any) => React.ReactNode;
+  body?: (rowData: any, options?: any) => React.ReactNode;
 }
 
 interface DataTableProps {
@@ -25,24 +25,23 @@ const DataTable: React.FC<DataTableProps> = ({
   striped = true,
   hover = true,
   paginator = false,
-  rows = 10
+  rows = 10,
 }) => {
-  // Use generic type argument for PrimeProps
   const dtProps: PrimeProps<Record<string, any>[]> = {
     value: data,
     stripedRows: striped,
     rowHover: hover,
     paginator,
-    rows
+    rows,
   };
 
   return (
     <div className="p-datatable-responsive-demo">
       <PrimeDataTable {...dtProps} className="p-datatable-sm">
-        {columns.map((col) => (
+        {columns.map((col, index) => (
           <PrimeColumn
-            key={col.field}
-            field={col.field}
+            key={col.field ?? `col-${index}`}
+            {...(col.field ? { field: col.field } : {})}
             header={col.header}
             sortable={col.sortable}
             body={col.body}

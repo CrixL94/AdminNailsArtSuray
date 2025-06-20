@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { Sidebar } from "primereact/sidebar";
+import { Divider } from "primereact/divider";
+import { Menu } from "primereact/menu";
+import { Button } from "primereact/button";
 
 const AdminLayout = () => {
+  const menuPages = useRef<Menu>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -13,20 +17,51 @@ const AdminLayout = () => {
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `block px-2 py-1 rounded ${
-    isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
+    `block px-2 py-1 rounded ${
+      isActive ? "text-blue-600 font-bold" : "text-gray-600"
   } hover:text-blue-600`;
 
+  const pagesItems = [
+    {
+      label: "Inicio",
+      icon: "pi pi-home",
+      command: () => {
+        setSidebarOpen(false);
+        navigate("/inicio");
+      },
+    },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden">
       <aside className="hidden md:flex flex-col w-64 bg-white shadow-md p-4 justify-between">
         <div>
-          <h2 className="text-xl font-bold mb-6 text-center">NAILS ART SURAY</h2>
+          <h2 className="text-xl font-bold mb-6 text-center">
+            NAILS ART SURAY
+          </h2>
           <nav className="space-y-3">
-            <NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink>
-            <NavLink to="/usuarios" className={navLinkClass}>Usuarios</NavLink>
-            <NavLink to="/inicio" className={navLinkClass}>Inicio</NavLink>
+            <NavLink to="/dashboard" className={navLinkClass}>
+              <i className="pi pi-home mr-2" /> Dashboard
+            </NavLink>
+            <Divider />
+            <NavLink to="/usuarios" className={navLinkClass}>
+              <i className="pi pi-users mr-2" /> Usuarios
+            </NavLink>
+            <Divider />
+            <Button
+              className="w-full flex items-center justify-between p-2"
+              onClick={(e) => menuPages.current?.toggle(e)}
+              text
+            >
+              <span className="flex items-center gap-2">
+                <i className="pi pi-folder" />
+                Páginas
+              </span>
+              <i className="pi pi-chevron-down" />
+            </Button>
+
+            <Menu model={pagesItems} popup ref={menuPages} />
+            <Divider />
 
             {/* <a href="/sobre-nosotros" className="block hover:text-blue-600">Sobre Nosotros</a>
             <a href="/servicios" className="block hover:text-blue-600">Servicios</a>
@@ -46,21 +81,47 @@ const AdminLayout = () => {
       </aside>
 
       {/* Sidebar móvil */}
-      <Sidebar visible={sidebarOpen} onHide={() => setSidebarOpen(false)} className="w-64">
+      <Sidebar
+        visible={sidebarOpen}
+        onHide={() => setSidebarOpen(false)}
+        className="w-64"
+      >
         <div className="flex flex-col justify-between h-full">
           <div>
-            <h2 className="text-xl font-bold mb-6 text-center sm:mt-10">NAILS ART SURAY</h2>
+            <h2 className="text-xl font-bold mb-6 text-center sm:mt-10">
+              NAILS ART SURAY
+            </h2>
             <nav className="space-y-3">
-              <NavLink to="/dashboard" className={navLinkClass} onClick={() => setSidebarOpen(false)}>Dashboard</NavLink>
-              <NavLink to="/usuarios" className={navLinkClass} onClick={() => setSidebarOpen(false)}>Usuarios</NavLink>
-              <NavLink to="/inicio" className={navLinkClass} onClick={() => setSidebarOpen(false)}>Inicio</NavLink>
+              <NavLink
+                to="/dashboard"
+                className={navLinkClass}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <i className="pi pi-home mr-2" /> Dashboard
+              </NavLink>
+              <Divider />
+              <NavLink
+                to="/usuarios"
+                className={navLinkClass}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <i className="pi pi-users mr-2" /> Usuarios
+              </NavLink>
+              <Divider />
+              <Button
+                className="w-full flex items-center justify-between p-2"
+                onClick={(e) => menuPages.current?.toggle(e)}
+                text
+              >
+                <span className="flex items-center gap-2">
+                  <i className="pi pi-folder" />
+                  Páginas
+                </span>
+                <i className="pi pi-chevron-down" />
+              </Button>
 
-              {/* <a href="/sobre-nosotros" className="block hover:text-blue-600">Sobre Nosotros</a>
-              <a href="/servicios" className="block hover:text-blue-600">Servicios</a>
-              <a href="/promociones" className="block hover:text-blue-600">Promociones</a>
-              <a href="/galeria" className="block hover:text-blue-600">Galería</a>
-              <a href="/testimonios" className="block hover:text-blue-600">Testimonios</a>
-              <a href="/contacto" className="block hover:text-blue-600">Contacto</a> */}
+              <Menu model={pagesItems} popup ref={menuPages} />
+              <Divider />
             </nav>
           </div>
 
@@ -77,7 +138,10 @@ const AdminLayout = () => {
       <main className="flex-1 bg-gray-100 relative">
         {/* Botón menú móvil */}
         <div className="md:hidden">
-          <button onClick={() => setSidebarOpen(true)} className="text-2xl pl-4">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-2xl pl-4"
+          >
             <i className="pi pi-align-justify" />
           </button>
         </div>
