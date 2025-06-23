@@ -6,12 +6,15 @@ import Loading from "../../Components/Loader";
 import { Badge } from "primereact/badge";
 import { Menu } from "primereact/menu";
 import { TriStateCheckbox } from "primereact/tristatecheckbox";
+import { listarUrlsPublicas } from "../../Services/Funciones";
+import { Image } from "primereact/image";
 
 const InicioScreen = () => {
   const toast = useRef<Toast>(null!);
   const menuRef = useRef<Menu[]>([]);
 
   const [inicioData, setInicioData] = useState<any>([]);
+  const [filesData, setFilesData] = useState<any>([]);
   const [loading, setLoading] = useState(true);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [usuarioEditar, setUsuarioEditar] = useState<any>(null);
@@ -19,13 +22,9 @@ const InicioScreen = () => {
 
   const fetchInicioData = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("vta_inicio_web").select("*");
-
-    if (error) {
-      console.error("Error al obtener datos de inicio:", error);
-    } else {
-      setInicioData(data);
-    }
+    const { data } = await supabase.from("vta_inicio_web").select("*");
+    setInicioData(data);
+    cargarImagenes();
     setLoading(false);
   };
 
@@ -34,6 +33,23 @@ const InicioScreen = () => {
     setDialogVisible(true);
   };
 
+  const cargarImagenes = async () => {
+    const nombresDeArchivo = inicioData
+      .flatMap((item: any) => [
+        item.imagen_url_fondo,
+        item.imagen_url_,
+        item.video_url,
+      ])
+      .filter(Boolean);
+
+    const urls = await listarUrlsPublicas("imagenes", "inicio_web");
+
+    const urlsFiltradas = urls.filter((url) => nombresDeArchivo.some((nombre: any) => url.includes(nombre))).map((url) => {
+        const nombre = url.split("/").pop();
+        return { nombre, url };
+    });
+    setFilesData(urlsFiltradas);
+  };
 
   const getActionItems = (info: any) => {
     const items = [
@@ -49,6 +65,9 @@ const InicioScreen = () => {
   useEffect(() => {
     fetchInicioData();
   }, []);
+
+  console.log(filesData[0].nombre);
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Toast ref={toast} />
@@ -73,7 +92,7 @@ const InicioScreen = () => {
             <Loading loading={loading} />
           ) : (
             <>
-              <div className="flex flex-wrap gap-4 sm:h-[49rem] h-[32rem]">
+              <div className="flex flex-wrap gap-4 sm:h-[49rem] h-[35rem]">
                 {inicioData.map((inicio: any, index: any) => (
                   <div key={inicio.id} className="relative w-full">
                     <div className="absolute top-2 right-2 flex items-center gap-2">
@@ -101,11 +120,22 @@ const InicioScreen = () => {
                       />
                     </div>
 
-                    <div className="bg-amber-700 w-full h-full mt-12">
-                      <div className="relative z-10 p-6 text-white flex flex-col justify-center items-center h-full">
-                        <h1 className="text-4xl font-bold">{inicio.titulo}</h1>
-                        <h2 className="text-2xl mt-2 text-center">{inicio.subtitulo}</h2>
-                        <p className="mt-4 max-w-3xl text-center">{inicio.resumen}</p>
+                    <div
+                      className="w-full h-full mt-12 relative bg-cover bg-center"
+                      style={{
+                        backgroundImage: `url(${inicio.imagen_url_fondo})`,
+                      }}
+                    >
+                      <div className="relative z-10 p-6 text-white flex flex-col justify-center items-center h-full bg-[rgba(0,0,0,0.5)] bg-opacity-40">
+                        <h1 className="sm:text-8xl text-4xl font-bold">
+                          {inicio.titulo}
+                        </h1>
+                        <h2 className="sm:text-4xl text-xl mt-2 text-center">
+                          {inicio.subtitulo}
+                        </h2>
+                        <p className="mt-4 sm:text-3xl text-center">
+                          {inicio.resumen}
+                        </p>
                       </div>
                     </div>
                   </div>
