@@ -10,8 +10,8 @@ import { Toast } from "primereact/toast";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const toast = useRef<Toast>(null!) 
-  const navigate = useNavigate(); 
+  const toast = useRef<Toast>(null!);
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -33,28 +33,46 @@ const Login = () => {
 
     setError(newErrors);
 
-    if (Object.keys(newErrors).length > 0) {
-      return;
-    }
+    if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
 
-    const { data, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: loginData, error: loginError } =
+      await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
 
     if (loginError) {
-      toastShow(toast, "error", "Error", 'Credenciales incorrectas', 3000);
-    } else {
-      const nombre = data.user.user_metadata.nombre;
-      toastShow(toast, "success", "Bienvenido", `Hola ${nombre}, has iniciado sesión correctamente`, 3000);
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1000);
+      toastShow(toast, "error", "Error", "Credenciales incorrectas", 3000);
+      return;
     }
+
+    const userEmail = loginData.user.email;
+
+    const { data: usuarioData, error: usuarioError } = await supabase
+      .from("vta_usuarios")
+      .select("Nombre, IdEstado")
+      .eq("Email", userEmail)
+      .single();
+
+    if (usuarioError || !usuarioData) {
+      toastShow(toast, "error", "Error", "No se encontró información del usuario", 3000);
+      return;
+    }
+
+    // Verificamos si está activo
+    if (usuarioData.IdEstado !== 1) {
+      toastShow(toast, "error", "Usuario inactivo", "No puedes iniciar sesión", 3000);
+      return;
+    }
+
+    // Usuario válido y activo
+    const nombre = usuarioData.Nombre;
+    toastShow(toast, "success", "Bienvenido", `Hola ${nombre}, has iniciado sesión correctamente`, 3000);
+
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 1000);
   };
 
   return (
@@ -113,11 +131,11 @@ const Login = () => {
                 }`}
               />
             </IconField>
-              {error.password && (
-                <small className="text-red-500 text-sm">
-                  Contraseña es obligatorio.
-                </small>
-              )}
+            {error.password && (
+              <small className="text-red-500 text-sm">
+                Contraseña es obligatorio.
+              </small>
+            )}
           </div>
 
           {errorMsg && <div className="text-red-500 text-sm">{errorMsg}</div>}
