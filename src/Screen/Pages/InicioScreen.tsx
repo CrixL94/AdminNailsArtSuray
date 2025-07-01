@@ -66,8 +66,6 @@ const InicioScreen = () => {
     fetchInicioData();
   }, []);
 
-  console.log(filesData[0].nombre);
-
   return (
     <div className="flex h-screen overflow-hidden">
       <Toast ref={toast} />
