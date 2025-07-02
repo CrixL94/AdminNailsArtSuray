@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "../Screen/Login";
-import InicioScreen from "../Screen/Pages/InicioScreen";
+import InicioScreen from "../Screen/Pages/Inicio/InicioScreen";
 import AdminLayout from "../Screen/AdminLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import DashboardScreen from "../Screen/Pages/DashboardScreen";

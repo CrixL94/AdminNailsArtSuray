@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "../../supabaseClient";
+import { supabase } from "../../../supabaseClient";
 import { Toast } from "primereact/toast";
 import { Button } from "primereact/button";
-import Loading from "../../Components/Loader";
+import Loading from "../../../Components/Loader";
 import { Badge } from "primereact/badge";
 import { Menu } from "primereact/menu";
 import { TriStateCheckbox } from "primereact/tristatecheckbox";
-import { listarUrlsPublicas } from "../../Services/Funciones";
+import { listarUrlsPublicas } from "../../../Services/Funciones";
 import { Image } from "primereact/image";
 
 const InicioScreen = () => {
@@ -77,12 +77,6 @@ const InicioScreen = () => {
             rounded
             aria-label="Filter"
             onClick={() => fetchInicioData()}
-          />
-          <Button
-            icon="pi pi-plus"
-            rounded
-            severity="success"
-            // onClick={() => abrirDialog()}
           />
         </div>
         <div className="bg-white rounded shadow sm:h-[52rem]">
