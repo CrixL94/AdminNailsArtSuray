@@ -88,10 +88,6 @@ const InicioScreen = () => {
                 {inicioData.map((inicio: any, index: any) => (
                   <div key={inicio.id} className="relative w-full">
                     <div className="absolute top-2 right-2 flex items-center gap-2">
-                      <TriStateCheckbox
-                        value={value}
-                        // onChange={(e) => setValue(e.value)}
-                      />
                       <Badge
                         value={inicio.NombreEstado}
                         className="text-white text-xs"
