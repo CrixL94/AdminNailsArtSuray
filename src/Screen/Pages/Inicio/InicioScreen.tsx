@@ -5,9 +5,8 @@ import { Button } from "primereact/button";
 import Loading from "../../../Components/Loader";
 import { Badge } from "primereact/badge";
 import { Menu } from "primereact/menu";
-import { TriStateCheckbox } from "primereact/tristatecheckbox";
 import { listarUrlsPublicas } from "../../../Services/Funciones";
-import { Image } from "primereact/image";
+import InicioCRUD from "./InicioCRUD";
 
 const InicioScreen = () => {
   const toast = useRef<Toast>(null!);
@@ -17,38 +16,50 @@ const InicioScreen = () => {
   const [filesData, setFilesData] = useState<any>([]);
   const [loading, setLoading] = useState(true);
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [usuarioEditar, setUsuarioEditar] = useState<any>(null);
-  const [value, setValue] = useState(null);
+  const [editar, setEditar] = useState<any>(null);
 
   const fetchInicioData = async () => {
     setLoading(true);
-    const { data } = await supabase.from("vta_inicio_web").select("*");
+
+    const { data, error } = await supabase.from("vta_inicio_web").select("*");
+
+    if (error) {
+      setInicioData([]);
+      setFilesData([]);
+      setLoading(false);
+      return;
+    }
+
+    if (!data) {
+      setInicioData([]);
+      setFilesData([]);
+      setLoading(false);
+      return;
+    }
     setInicioData(data);
-    cargarImagenes();
-    setLoading(false);
-  };
 
-  const abrirDialog = (info?: any) => {
-    setUsuarioEditar(info ?? null);
-    setDialogVisible(true);
-  };
-
-  const cargarImagenes = async () => {
-    const nombresDeArchivo = inicioData
-      .flatMap((item: any) => [
-        item.imagen_url_fondo,
-        item.imagen_url_,
-        item.video_url,
-      ])
+    const nombresDeArchivo = data
+      .flatMap((item: any) => [item.imagen_url_fondo])
       .filter(Boolean);
 
     const urls = await listarUrlsPublicas("imagenes", "inicio_web");
 
-    const urlsFiltradas = urls.filter((url) => nombresDeArchivo.some((nombre: any) => url.includes(nombre))).map((url) => {
+    const urlsFiltradas = urls
+      .filter((url) =>
+        nombresDeArchivo.some((nombre: any) => url.includes(nombre))
+      )
+      .map((url) => {
         const nombre = url.split("/").pop();
         return { nombre, url };
-    });
+      });
+
     setFilesData(urlsFiltradas);
+    setLoading(false);
+  };
+
+  const abrirDialog = (info?: any) => {
+    setEditar(info);
+    setDialogVisible(true);
   };
 
   const getActionItems = (info: any) => {
@@ -66,6 +77,10 @@ const InicioScreen = () => {
     fetchInicioData();
   }, []);
 
+  const imagenFondo = filesData.find(
+    (img: any) => img.nombre === inicioData[0].imagen_url_fondo
+  );
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Toast ref={toast} />
@@ -80,11 +95,11 @@ const InicioScreen = () => {
           />
         </div>
         <div className="bg-white rounded shadow sm:h-[52rem]">
-          {loading ? (
+          {loading || !imagenFondo ? (
             <Loading loading={loading} />
           ) : (
             <>
-              <div className="flex flex-wrap gap-4 sm:h-[49rem] h-[35rem]">
+              <div className="flex flex-wrap gap-4 sm:h-[49rem] h-[35rem] overflow-y-auto sm:overflow-y-visible sm:mb-0">
                 {inicioData.map((inicio: any, index: any) => (
                   <div key={inicio.id} className="relative w-full">
                     <div className="absolute top-2 right-2 flex items-center gap-2">
@@ -108,22 +123,39 @@ const InicioScreen = () => {
                       />
                     </div>
 
-                    <div
-                      className="w-full h-full mt-12 relative bg-cover bg-center"
-                      style={{
-                        backgroundImage: `url(${inicio.imagen_url_fondo})`,
-                      }}
-                    >
-                      <div className="relative z-10 p-6 text-white flex flex-col justify-center items-center h-full bg-[rgba(0,0,0,0.5)] bg-opacity-40">
-                        <h1 className="sm:text-8xl text-4xl font-bold">
-                          {inicio.titulo}
-                        </h1>
-                        <h2 className="sm:text-4xl text-xl mt-2 text-center">
-                          {inicio.subtitulo}
-                        </h2>
-                        <p className="mt-4 sm:text-3xl text-center">
-                          {inicio.resumen}
-                        </p>
+                    <div className="w-full h-full mt-12 relative bg-gray-100">
+                      <div className="flex flex-col md:flex-row items-center justify-center h-full sm:px-[10rem] sm:mb-0 overflow-y-auto sm:overflow-y-visible">
+                        <div className="flex-1 text-center md:text-left sm:p-8 p-4">
+                          <h1 className="text-2xl sm:text-6xl font-bold text-pink-600 sm:mb-4 sm:mt-0 mt-[7rem]">
+                            {inicio.titulo}
+                          </h1>
+
+                          <p className="sm:text-2xl text-base md:text-lg text-gray-600">
+                            <span className="font-semibold sm:text-lg text-base text-pink-500">
+                              {inicio.subtitulo}
+                            </span>
+                            <span> </span>
+                            {inicio.resumen}
+                          </p>
+
+                          <p className="sm:text-2xl text-base md:text-lg text-gray-600 mb-4">
+                            <br className="hidden sm:block" />
+                            <span className="font-semibold">
+                              {inicio.label_atencion}
+                            </span>
+                          </p>
+
+                          <button className="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-full transition duration-300">
+                            {inicio.label_boton}
+                          </button>
+                        </div>
+                        <div className="flex-1">
+                          <img
+                            src={`${imagenFondo?.url}`}
+                            alt="Manicura y Pedicura"
+                            className="w-full h-full object-cover sm:rounded-xl shadow-lg"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -133,6 +165,14 @@ const InicioScreen = () => {
           )}
         </div>
       </main>
+
+      <InicioCRUD
+        visible={dialogVisible}
+        onHide={() => setDialogVisible(false)}
+        editar={editar}
+        filesData={filesData}
+        getInfo={fetchInicioData}
+      />
     </div>
   );
 };
