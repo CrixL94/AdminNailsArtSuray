@@ -167,7 +167,9 @@ const UsuariosScreen = () => {
 
         <div className="sm:bg-white sm:rounded sm:shadow sm:p-4 h-[52rem] overflow-y-auto">
           {loading ? (
-            <Loading loading={loading} />
+            <div className="flex items-center justify-center h-screen">
+              <Loading loading={loading} />
+            </div>
           ) : (
             <>
               {/* Tabla solo visible en pantallas grandes */}

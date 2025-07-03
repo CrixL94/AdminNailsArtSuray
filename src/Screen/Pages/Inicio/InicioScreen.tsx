@@ -96,7 +96,9 @@ const InicioScreen = () => {
         </div>
         <div className="bg-white rounded shadow sm:h-[52rem]">
           {loading || !imagenFondo ? (
-            <Loading loading={loading} />
+            <div className="flex items-center justify-center h-screen">
+              <Loading loading={loading} />
+            </div>
           ) : (
             <>
               <div className="flex flex-wrap gap-4 sm:h-[49rem] h-[35rem] overflow-y-auto sm:overflow-y-visible sm:mb-0">
@@ -126,12 +128,12 @@ const InicioScreen = () => {
                     <div className="w-full h-full mt-12 relative bg-gray-100">
                       <div className="flex flex-col md:flex-row items-center justify-center h-full sm:px-[10rem] sm:mb-0 overflow-y-auto sm:overflow-y-visible">
                         <div className="flex-1 text-center md:text-left sm:p-8 p-4">
-                          <h1 className="text-2xl sm:text-6xl font-bold text-pink-600 sm:mb-4 sm:mt-0 mt-[7rem]">
+                          <h1 className="text-2xl sm:text-6xl font-bold text-purple-600 sm:mb-4 sm:mt-0 mt-[7rem]">
                             {inicio.titulo}
                           </h1>
 
                           <p className="sm:text-2xl text-base md:text-lg text-gray-600">
-                            <span className="font-semibold sm:text-lg text-base text-pink-500">
+                            <span className="font-semibold sm:text-lg text-base text-purple-500">
                               {inicio.subtitulo}
                             </span>
                             <span> </span>
@@ -145,7 +147,7 @@ const InicioScreen = () => {
                             </span>
                           </p>
 
-                          <button className="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-full transition duration-300">
+                          <button className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-6 rounded-full transition duration-300">
                             {inicio.label_boton}
                           </button>
                         </div>
