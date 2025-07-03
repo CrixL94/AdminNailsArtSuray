@@ -5,6 +5,7 @@ import AdminLayout from "../Screen/AdminLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import DashboardScreen from "../Screen/Pages/DashboardScreen";
 import UsuariosScreen from "../Screen/Admin/Usuarios/UsuariosScreen";
+import AboutUsScreen from "../Screen/Pages/AboutUs/AboutUsScreen";
 
 const AppRouter = () => {
   return (
@@ -25,6 +26,7 @@ const AppRouter = () => {
           <Route index element={<Navigate to="/dashboard" />} />
           <Route path="dashboard" element={<DashboardScreen />} />
           <Route path="usuarios" element={<UsuariosScreen />} />
+          <Route path="aboutUs" element={<AboutUsScreen />} />
           <Route path="inicio" element={<InicioScreen />} />
         </Route>
 

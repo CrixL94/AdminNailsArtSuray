@@ -19,7 +19,7 @@ const AdminLayout = () => {
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `block px-2 py-1 rounded ${
       isActive ? "text-blue-600 font-bold" : "text-gray-600"
-  } hover:text-blue-600`;
+    } hover:text-blue-600`;
 
   const pagesItems = [
     {
@@ -28,6 +28,14 @@ const AdminLayout = () => {
       command: () => {
         setSidebarOpen(false);
         navigate("/inicio");
+      },
+    },
+    {
+      label: "Sobre Nostros",
+      icon: "pi pi-home",
+      command: () => {
+        setSidebarOpen(false);
+        navigate("/aboutUs");
       },
     },
   ];
