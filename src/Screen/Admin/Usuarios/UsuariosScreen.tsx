@@ -90,7 +90,7 @@ const UsuariosScreen = () => {
 
 
   const columns = [
-    { header: "ID", field: "id", sortable: true },
+    // { header: "ID", field: "id", sortable: true },
     { header: "Nombre", field: "Nombre", sortable: true },
     { header: "Correo", field: "Email", sortable: true },
     { header: "Celular", field: "Telefono", sortable: true },
@@ -100,7 +100,7 @@ const UsuariosScreen = () => {
       body: (rowData: any) => (
         <Badge
           value={rowData.NombreEstado}
-          style={{ backgroundColor: rowData.ColorFondo }}
+          style={{ backgroundColor: rowData.ColorFondo, color:'black' }}
         />
       ),
       sortable: true,
@@ -217,10 +217,10 @@ const UsuariosScreen = () => {
                         />
                       </div>
                       <Card>
-                        <div className="text-sm text-gray-700 space-y-1">
-                          <p>
+                        <div className="text-sm text-gray-700 space-y-1 mt-3">
+                          {/* <p>
                             <span className="font-semibold">ID:</span> {user.id}
-                          </p>
+                          </p> */}
                           <p>
                             <span className="font-semibold">Nombre:</span>{" "}
                             {user.Nombre}

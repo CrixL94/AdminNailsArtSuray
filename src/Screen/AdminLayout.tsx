@@ -55,6 +55,9 @@ const AdminLayout = () => {
             <NavLink to="/usuarios" className={navLinkClass}>
               <i className="pi pi-users mr-2" /> Usuarios
             </NavLink>
+            <NavLink to="/testimonios" className={navLinkClass}>
+              <i className="pi pi-list mr-2" /> Testimonios
+            </NavLink>
             <Divider />
             <Button
               className="w-full flex items-center justify-between p-2"
@@ -70,13 +73,6 @@ const AdminLayout = () => {
 
             <Menu model={pagesItems} popup ref={menuPages} />
             <Divider />
-
-            {/* <a href="/sobre-nosotros" className="block hover:text-blue-600">Sobre Nosotros</a>
-            <a href="/servicios" className="block hover:text-blue-600">Servicios</a>
-            <a href="/promociones" className="block hover:text-blue-600">Promociones</a>
-            <a href="/galeria" className="block hover:text-blue-600">Galería</a>
-            <a href="/testimonios" className="block hover:text-blue-600">Testimonios</a>
-            <a href="/contacto" className="block hover:text-blue-600">Contacto</a> */}
           </nav>
         </div>
 
@@ -114,6 +110,10 @@ const AdminLayout = () => {
                 onClick={() => setSidebarOpen(false)}
               >
                 <i className="pi pi-users mr-2" /> Usuarios
+              </NavLink>
+              <Divider />
+              <NavLink to="/testimonios" className={navLinkClass} onClick={() => setSidebarOpen(false)}>
+                <i className="pi pi-list mr-2" /> Testimonios
               </NavLink>
               <Divider />
               <Button
