@@ -31,11 +31,19 @@ const AdminLayout = () => {
       },
     },
     {
-      label: "Sobre Nostros",
+      label: "Sobre Nosotros",
       icon: "pi pi-home",
       command: () => {
         setSidebarOpen(false);
         navigate("/aboutUs");
+      },
+    },
+    {
+      label: "Servicios",
+      icon: "pi pi-list",
+      command: () => {
+        setSidebarOpen(false);
+        navigate("/servicios");
       },
     },
   ];
@@ -87,6 +95,7 @@ const AdminLayout = () => {
       {/* Sidebar móvil */}
       <Sidebar
         visible={sidebarOpen}
+        position="right"
         onHide={() => setSidebarOpen(false)}
         className="w-64"
       >
@@ -145,7 +154,7 @@ const AdminLayout = () => {
       {/* Contenido principal */}
       <main className="flex-1 bg-gray-100 relative">
         {/* Botón menú móvil */}
-        <div className="md:hidden">
+        <div className="flex justify-end md:hidden pr-2">
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-2xl pl-4"
