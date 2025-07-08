@@ -32,7 +32,7 @@ const AdminLayout = () => {
     },
     {
       label: "Sobre Nosotros",
-      icon: "pi pi-home",
+      icon: "pi pi-objects-column",
       command: () => {
         setSidebarOpen(false);
         navigate("/aboutUs");
@@ -44,6 +44,14 @@ const AdminLayout = () => {
       command: () => {
         setSidebarOpen(false);
         navigate("/servicios");
+      },
+    },
+    {
+      label: "Detalle Servicios",
+      icon: "pi pi-list-check",
+      command: () => {
+        setSidebarOpen(false);
+        navigate("detalles/servicios");
       },
     },
   ];
@@ -121,7 +129,11 @@ const AdminLayout = () => {
                 <i className="pi pi-users mr-2" /> Usuarios
               </NavLink>
               <Divider />
-              <NavLink to="/testimonios" className={navLinkClass} onClick={() => setSidebarOpen(false)}>
+              <NavLink
+                to="/testimonios"
+                className={navLinkClass}
+                onClick={() => setSidebarOpen(false)}
+              >
                 <i className="pi pi-list mr-2" /> Testimonios
               </NavLink>
               <Divider />

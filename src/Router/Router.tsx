@@ -8,6 +8,7 @@ import UsuariosScreen from "../Screen/Admin/Usuarios/UsuariosScreen";
 import AboutUsScreen from "../Screen/Pages/AboutUs/AboutUsScreen";
 import TestimoniosScreen from "../Screen/Admin/Testimonios/TestimoniosScreen";
 import ServiciosScreen from "../Screen/Pages/Servicios/ServiciosScreen";
+import DetallesServiciosScreen from "../Screen/Pages/DetallesServicios/DetallesServiciosScreen";
 
 const AppRouter = () => {
   return (
@@ -32,6 +33,7 @@ const AppRouter = () => {
           <Route path="inicio" element={<InicioScreen />} />
           <Route path="testimonios" element={<TestimoniosScreen />} />
           <Route path="servicios" element={<ServiciosScreen />} />
+          <Route path="detalles/servicios" element={<DetallesServiciosScreen />} />
         </Route>
 
         {/* Catch all */}

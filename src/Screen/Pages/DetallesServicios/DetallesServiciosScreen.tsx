@@ -7,73 +7,85 @@ import Loading from "../../../Components/Loader";
 import { Menu } from "primereact/menu";
 import { Badge } from "primereact/badge";
 import DataTable from "../../../Components/DataTable";
-import { Dialog } from "primereact/dialog";
-import { RadioButton } from "primereact/radiobutton";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { Card } from "primereact/card";
+import { MultiSelect } from "primereact/multiselect";
+import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
 
-const TestimoniosScreen = () => {
+const DetallesServiciosScreen = () => {
   const menuRef = useRef<Menu[]>([]);
   const toast = useRef<Toast>(null!);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any[]>([]);
-  const [estados, setEstados] = useState<{ label: string; value: number }[]>(
-    []
-  );
-  const [dialogVisible, setDialogVisible] = useState(false);
+  const [estados, setEstados] = useState<{ label: string; value: number }[]>([]);
+  const [dialogEstadoVisible, setDialoEstadogVisible] = useState(false);
   const [selectedTestimonio, setSelectedTestimonio] = useState<any>(null);
   const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
 
+  const [servicios, setServicios] = useState<{ label: string; value: number }[]>([]);
+  const [selectedServicios, setSelectedServicios] = useState<number[]>([]);
+
   const getInfo = async () => {
     setLoading(true);
+    const { data: detalles } = await supabase
+      .from("vta_detalles_servicios")
+      .select("*");
 
-    try {
-      // Obtener testimonios
-      const { data: testimonios, error: testimoniosError } = await supabase
-        .from("vta_testimonios")
-        .select("*");
+    const { data: serviciosData } = await supabase
+      .from("servicios")
+      .select("id, nombre");
 
-      // Obtener estados
-      const { data: estadosData, error: estadosError } = await supabase
-        .from("Estados")
-        .select("IdEstado, NombreEstado");
+    const { data: estadosData } = await supabase
+      .from("Estados")
+      .select("IdEstado, NombreEstado");
 
-      if (testimoniosError || estadosError) {
-        toastShow(
-          toast,
-          "error",
-          "Error",
-          "No se pudo obtener la información.",
-          3000
-        );
-        setLoading(false);
-        return;
-      }
+    const estadosFiltrados = (estadosData || []).filter((estado: any) =>
+      [1, 2].includes(estado.IdEstado)
+    );
 
-      const estadosFiltrados = (estadosData || []).filter((estado: any) =>
-        [4, 5].includes(estado.IdEstado)
-      );
+    setEstados(
+      estadosFiltrados.map((e: any) => ({
+        label: e.NombreEstado,
+        value: e.IdEstado,
+      }))
+    );
 
-      setEstados(
-        estadosFiltrados.map((e: any) => ({
-          label: e.NombreEstado,
-          value: e.IdEstado,
-        }))
-      );
+    setServicios(
+      (serviciosData || []).map((s) => ({
+        label: s.nombre,
+        value: s.id,
+      }))
+    );
+    setData(detalles || []);
 
-      setData(testimonios || []);
-    } catch (e) {
-      toastShow(toast, "error", "Error", "Ocurrió un error inesperado.", 3000);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(false);
+  };
+
+  const eliminar = async (info: any) => {
+    confirmDialog({
+      message: "¿Deseas eliminar el detalle del servicio?",
+      header: "Confirmación",
+      icon: "pi pi-exclamation-triangle",
+      accept: async () => {
+        const { error } = await supabase
+          .from("servicios_detalles")
+          .delete()
+          .eq("id", info.id);
+        if (error) {
+          toastShow(toast, "error", "Error", error.message, 3000);
+        } else {
+          toastShow(toast, "warn", "Eliminado", "Detalle eliminado", 3000);
+          getInfo();
+        }
+      },
+    });
   };
 
   // Abrir dialog
   const abrirDialogEstados = (testimonio: any) => {
     setSelectedTestimonio(testimonio);
-    setSelectedEstado(testimonio.idestado);
-    setDialogVisible(true);
+    setSelectedEstado(testimonio.id_estado);
+    setDialoEstadogVisible(true);
   };
 
   // Manejar cambio en checkbox
@@ -96,8 +108,8 @@ const TestimoniosScreen = () => {
     setLoading(true);
 
     const { error } = await supabase
-      .from("testimonios")
-      .update({ idestado: selectedEstado })
+      .from("servicios_detalles")
+      .update({ id_estado: selectedEstado })
       .eq("id", selectedTestimonio.id)
       .select();
 
@@ -117,7 +129,7 @@ const TestimoniosScreen = () => {
         "Estado actualizado correctamente",
         3000
       );
-      setDialogVisible(false);
+      setDialoEstadogVisible(false);
       getInfo();
     }
 
@@ -127,41 +139,7 @@ const TestimoniosScreen = () => {
   const cerrarDialog = () => {
     setSelectedTestimonio(null);
     setSelectedEstado(null);
-    setDialogVisible(false);
-  };
-
-  const eliminarUsuario = (info: any) => {
-    confirmDialog({
-      message: `¿Deseas eliminar el testimonio?`,
-      header: "Confirmación",
-      icon: "pi pi-exclamation-triangle",
-      acceptLabel: "Sí",
-      rejectLabel: "Cancelar",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        try {
-          const { error } = await supabase
-            .from("testimonios")
-            .delete()
-            .eq("id", info.id);
-
-          if (error) {
-            toastShow(
-              toast,
-              "error",
-              "Error",
-              "No se pudo elimianar el testimonio",
-              3000
-            );
-          } else {
-            toastShow(toast, "warn", "Eliminado", `Testimonio Eliminado`, 3000);
-            getInfo();
-          }
-        } catch (err: any) {
-          toastShow(toast, "error", "Error inesperado", err.message, 3000);
-        }
-      },
-    });
+    setDialoEstadogVisible(false);
   };
 
   const getActionItems = (info: any) => {
@@ -169,24 +147,34 @@ const TestimoniosScreen = () => {
       {
         label: "Eliminar",
         icon: "pi pi-trash",
-        command: () => eliminarUsuario(info),
+        command: () => eliminar(info),
       },
     ];
     return items;
   };
 
+  const filteredData = selectedServicios.length
+    ? data.filter((d) => selectedServicios.includes(d.id_servicio))
+    : data;
+
   const columns = [
     // { header: "ID", field: "id", sortable: true },
-    { header: "Nombre", field: "nombre", sortable: true },
-    { header: "Celular", field: "Celular", sortable: true },
-    { header: "Mensaje", field: "contenido", sortable: true },
+    { header: "Detalle Servicio", field: "nombre", sortable: true },
+    { header: "Descripcion", field: "descripcion", sortable: true },
+    { header: "Precio", field: "precio", sortable: true },
+    { header: "Tiempo (Minutos)", field: "duracion_minutos", sortable: true },
+    { header: "Servicio", field: "servicio_principal", sortable: true },
     {
       header: "Estado",
       field: "NombreEstado",
       body: (rowData: any) => (
         <Badge
           value={rowData.NombreEstado}
-          style={{ backgroundColor: rowData.ColorFondo, color: "black", cursor: "pointer", }}
+          style={{
+            backgroundColor: rowData.ColorFondo,
+            color: "black",
+            cursor: "pointer",
+          }}
           onClick={() => abrirDialogEstados(rowData)}
         />
       ),
@@ -217,51 +205,6 @@ const TestimoniosScreen = () => {
     },
   ];
 
-  // Render del diálogo para selección de estados
-  const renderDialog = () => (
-    <Dialog
-      header={`Cambiar Estado Testimonio`}
-      visible={dialogVisible}
-      className="sm:w-1/3 w-full sm:p-0 p-2"
-      modal
-      onHide={cerrarDialog}
-      footer={
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={cerrarDialog}
-            className="text-gray-700 hover:text-gray-800"
-          >
-            Cancelar
-          </button>
-
-          <button
-            onClick={guardarEstado}
-            className="text-pink-600 hover:text-pink-600"
-          >
-            Guardar
-          </button>
-        </div>
-      }
-    >
-      <div className="flex flex-col gap-3">
-        {estados.map((estado) => (
-          <div key={estado.value} className="flex align-items-center">
-            <RadioButton
-              inputId={`estado_${estado.value}`}
-              name="estado"
-              value={estado.value}
-              onChange={() => onEstadoChange(estado.value)}
-              checked={selectedEstado === estado.value}
-            />
-            <label htmlFor={`estado_${estado.value}`} className="ml-2">
-              {estado.label}
-            </label>
-          </div>
-        ))}
-      </div>
-    </Dialog>
-  );
-
   useEffect(() => {
     getInfo();
   }, []);
@@ -272,12 +215,38 @@ const TestimoniosScreen = () => {
       <ConfirmDialog />
       <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
         <div className="flex items-center gap-2 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Testimonios</h1>
+          <h1 className="sm:text-3xl text-2xl font-bold">Detalles Servicios</h1>
           <Button
             icon="pi pi-sync"
             rounded
             aria-label="Filter"
             onClick={() => getInfo()}
+          />
+
+          <div className="hidden sm:block">
+            <MultiSelect
+              value={selectedServicios}
+              options={servicios}
+              onChange={(e) => setSelectedServicios(e.value)}
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Filtar por Servicio"
+              className="w-full"
+              display="chip"
+            />
+          </div>
+        </div>
+
+        <div className="my-3 sm:hidden">
+          <MultiSelect
+            value={selectedServicios}
+            options={servicios}
+            onChange={(e) => setSelectedServicios(e.value)}
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecciona servicios"
+            className="w-full"
+            display="chip"
           />
         </div>
 
@@ -292,7 +261,7 @@ const TestimoniosScreen = () => {
               <div className="hidden sm:block">
                 <DataTable
                   columns={columns}
-                  data={data}
+                  data={filteredData}
                   striped
                   hover
                   rows={5}
@@ -302,13 +271,16 @@ const TestimoniosScreen = () => {
               {/* Tarjetas para pantallas pequeñas */}
               <div className="sm:hidden">
                 <div className="flex flex-col gap-4 h-[85vh] overflow-y-auto">
-                  {data.map((info, index) => (
+                  {filteredData.map((info, index) => (
                     <div key={info.id} className="relative">
                       <div className="absolute top-2 right-2 flex items-center gap-2">
                         <Badge
                           value={info.NombreEstado}
                           className="text-white text-xs"
-                          style={{ backgroundColor: info.ColorFondo, color:'black' }}
+                          style={{
+                            backgroundColor: info.ColorFondo,
+                            color: "black",
+                          }}
                           onClick={() => abrirDialogEstados(info)}
                         />
                         <Button
@@ -331,16 +303,30 @@ const TestimoniosScreen = () => {
                             <span className="font-semibold">ID:</span> {info.id}
                           </p> */}
                           <p>
-                            <span className="font-semibold">Nombre:</span>{" "}
+                            <span className="font-semibold">
+                              Tipo Servicio:
+                            </span>{" "}
+                            {info.servicio_principal}
+                          </p>
+                          <p>
+                            <span className="font-semibold">
+                              Detalle Servicio:
+                            </span>{" "}
                             {info.nombre}
                           </p>
                           <p>
-                            <span className="font-semibold">Celular:</span>{" "}
-                            {info.Celular}
+                            <span className="font-semibold">Descripción:</span>{" "}
+                            {info.descripcion}
                           </p>
                           <p>
-                            <span className="font-semibold">Mensaje:</span>{" "}
-                            {info.contenido}
+                            <span className="font-semibold">Precio:</span>{" "}
+                            {info.precio}
+                          </p>
+                          <p>
+                            <span className="font-semibold">
+                              Tiempo estimado:
+                            </span>{" "}
+                            {info.duracion_minutos} min.
                           </p>
                         </div>
                       </Card>
@@ -351,11 +337,18 @@ const TestimoniosScreen = () => {
             </>
           )}
         </div>
-
-        {renderDialog()}
       </main>
+
+      <DialogCambiarEstado
+        dialogEstadoVisible={dialogEstadoVisible}
+        cerrarDialog={cerrarDialog}
+        guardarEstado={guardarEstado}
+        estados={estados}
+        onEstadoChange={onEstadoChange}
+        selectedEstado={selectedEstado}
+      />
     </div>
   );
 };
 
-export default TestimoniosScreen;
+export default DetallesServiciosScreen;

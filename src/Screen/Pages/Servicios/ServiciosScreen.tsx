@@ -10,8 +10,10 @@ import ServiciosCRUD from "./ServiciosCRUD";
 import { toastShow } from "../../../Services/ToastService";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
+import { useNavigate } from "react-router-dom";
 
 const ServiciosScreen = () => {
+  const navigate = useNavigate();
   const toast = useRef<Toast>(null!);
   const menuRef = useRef<Menu[]>([]);
 
@@ -229,6 +231,14 @@ const ServiciosScreen = () => {
             severity="success"
             onClick={() => abrirDialog()}
           />
+          <Button
+            icon="pi pi-list"
+            label="Detalles Servicios"
+            className="p-button-sm"
+            rounded
+            severity="info"
+            onClick={() => navigate("../detalles/servicios")}
+          />
         </div>
 
         <div className="sm:bg-white sm:rounded sm:shadow sm:h-[52rem] h-[35rem] sm:p-6 p-0 overflow-y-auto">
@@ -281,7 +291,7 @@ const ServiciosScreen = () => {
                     )}
 
                     {/* Contenido */}
-                    <div className="p-4 flex flex-col justify-between h-full">
+                    <div className="p-4 flex flex-col justify-between">
                       <div>
                         <h2 className="text-lg font-bold text-purple-600 mb-2">
                           {servicio.nombre}
@@ -289,6 +299,15 @@ const ServiciosScreen = () => {
                         <p className="text-gray-600 text-sm mb-4">
                           {servicio.descripcion}
                         </p>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => console.log("Ver detalles")}
+                          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-full shadow-md hover:bg-purple-700 transition duration-300"
+                        >
+                          Detalles<i className="pi pi-eye"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
