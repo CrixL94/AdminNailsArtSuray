@@ -6,6 +6,10 @@ import { supabase } from "../../../supabaseClient";
 import Loading from "../../../Components/Loader";
 import { Badge } from "primereact/badge";
 import { Menu } from "primereact/menu";
+import ServiciosCRUD from "./ServiciosCRUD";
+import { toastShow } from "../../../Services/ToastService";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
 
 const ServiciosScreen = () => {
   const toast = useRef<Toast>(null!);
@@ -14,6 +18,14 @@ const ServiciosScreen = () => {
   const [inicioData, setInicioData] = useState<any>([]);
   const [filesData, setFilesData] = useState<any>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [editar, setEditar] = useState<any>(null);
+  const [estados, setEstados] = useState<{ label: string; value: number }[]>(
+    []
+  );
+  const [dialogEstadoVisible, setDialogEstadoVisible] = useState(false);
+  const [selectedinfo, setSelectedInfo] = useState<any>(null);
+  const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
 
   const getInfo = async () => {
     setLoading(true);
@@ -54,17 +66,140 @@ const ServiciosScreen = () => {
     setLoading(false);
   };
 
+  const fetchEstados = async () => {
+    const { data } = await supabase
+      .from("Estados")
+      .select("IdEstado, NombreEstado");
+
+    const estadosFiltrados = (data || []).filter((estado: any) =>
+      [1, 2].includes(estado.IdEstado)
+    );
+
+    setEstados(
+      estadosFiltrados.map((e: any) => ({
+        label: e.NombreEstado,
+        value: e.IdEstado,
+      }))
+    );
+  };
+
+  const abrirDialog = (info?: any) => {
+    setEditar(info);
+    setDialogVisible(true);
+  };
+
+  // Abrir dialog
+  const abrirDialogEstados = (info: any) => {
+    setSelectedInfo(info);
+    setSelectedEstado(info.id_estado);
+    setDialogEstadoVisible(true);
+  };
+
+  // Manejar cambio en checkbox
+  const onEstadoChange = (estadoValue: number) => {
+    setSelectedEstado(estadoValue);
+  };
+
+  const eliminarServicio = (info: any) => {
+    confirmDialog({
+      message: `¿Deseas eliminar el servicio "${info.nombre}"?`,
+      header: "Confirmación",
+      icon: "pi pi-exclamation-triangle",
+      acceptLabel: "Sí",
+      rejectLabel: "Cancelar",
+      acceptClassName: "p-button-danger",
+      accept: async () => {
+        try {
+          const { error } = await supabase
+            .from("servicios")
+            .delete()
+            .eq("id", info.id);
+
+          if (error) {
+            toastShow(
+              toast,
+              "error",
+              "Error",
+              "No se pudo eliminado el servicio",
+              3000
+            );
+          } else {
+            toastShow(
+              toast,
+              "warn",
+              "Servicio Eliminado",
+              `${info.nombre} eliminado correctamente`,
+              3000
+            );
+            getInfo();
+          }
+        } catch (err: any) {
+          toastShow(toast, "error", "Error inesperado", err.message, 3000);
+        }
+      },
+    });
+  };
+
+  const guardarEstado = async () => {
+    if (selectedEstado === 3) {
+      toastShow(
+        toast,
+        "error",
+        "Error de validación",
+        "Es requerido un estado",
+        3000
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from("servicios")
+      .update({ id_estado: selectedEstado })
+      .eq("id", selectedinfo.id)
+      .select();
+
+    if (error) {
+      toastShow(
+        toast,
+        "error",
+        "Error",
+        "No se pudo actualizar el estado",
+        3000
+      );
+    } else {
+      toastShow(
+        toast,
+        "success",
+        "Éxito",
+        "Estado actualizado correctamente",
+        3000
+      );
+      cerrarDialog();
+      getInfo();
+    }
+
+    setLoading(false);
+  };
+
+  const cerrarDialog = () => {
+    setSelectedInfo(null);
+    setSelectedEstado(null);
+    setDialogEstadoVisible(false);
+  };
+
   const getActionItems = (info: any) => {
     const items = [
       {
         label: "Editar",
         icon: "pi pi-pencil",
-        // command: () => abrirDialog(info),
+        command: () => abrirDialog(info),
       },
       {
         label: "Eliminar",
         icon: "pi pi-trash",
-        // command: () => eliminarServicio(info),
+        command: () => eliminarServicio(info),
       },
     ];
     return items;
@@ -72,11 +207,13 @@ const ServiciosScreen = () => {
 
   useEffect(() => {
     getInfo();
+    fetchEstados();
   }, []);
 
   return (
     <div className="flex h-screen overflow-hidden">
       <Toast ref={toast} />
+      <ConfirmDialog />
       <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
         <div className="flex items-center gap-2 mb-4">
           <h1 className="sm:text-3xl text-2xl font-bold">Servicios</h1>
@@ -86,9 +223,15 @@ const ServiciosScreen = () => {
             aria-label="Filter"
             onClick={() => getInfo()}
           />
+          <Button
+            icon="pi pi-plus"
+            rounded
+            severity="success"
+            onClick={() => abrirDialog()}
+          />
         </div>
 
-        <div className="sm:bg-white sm:rounded sm:shadow sm:h-[52rem] h-[35rem] sm:p-6 p-0 overflow-y-auto sm:overflow-visible">
+        <div className="sm:bg-white sm:rounded sm:shadow sm:h-[52rem] h-[35rem] sm:p-6 p-0 overflow-y-auto">
           {loading || !filesData ? (
             <div className="flex items-center justify-center h-screen">
               <Loading loading={loading} />
@@ -110,6 +253,7 @@ const ServiciosScreen = () => {
                         value={servicio.NombreEstado}
                         className="text-white text-xs"
                         style={{ backgroundColor: servicio.ColorFondo }}
+                        onClick={() => abrirDialogEstados(servicio)}
                       />
 
                       <Button
@@ -132,7 +276,7 @@ const ServiciosScreen = () => {
                       <img
                         src={imagen.url}
                         alt={servicio.nombre}
-                        className="w-full h-48 object-cover"
+                        className="w-full object-cover"
                       />
                     )}
 
@@ -154,6 +298,23 @@ const ServiciosScreen = () => {
           )}
         </div>
       </main>
+
+      <ServiciosCRUD
+        visible={dialogVisible}
+        onHide={() => setDialogVisible(false)}
+        editar={editar}
+        filesData={filesData}
+        getInfo={getInfo}
+      />
+
+      <DialogCambiarEstado
+        dialogEstadoVisible={dialogEstadoVisible}
+        cerrarDialog={cerrarDialog}
+        guardarEstado={guardarEstado}
+        estados={estados}
+        onEstadoChange={onEstadoChange}
+        selectedEstado={selectedEstado}
+      />
     </div>
   );
 };
