@@ -112,17 +112,33 @@ const ServiciosScreen = () => {
       acceptClassName: "p-button-danger",
       accept: async () => {
         try {
-          const { error } = await supabase
-            .from("servicios")
+          const { error: detallesError } = await supabase
+            .from("servicios_detalles")
             .delete()
-            .eq("id", info.id);
+            .eq("id_servicio", info.id);
 
-          if (error) {
+          if (detallesError) {
             toastShow(
               toast,
               "error",
               "Error",
-              "No se pudo eliminado el servicio",
+              "No se pudieron eliminar los detalles del servicio",
+              3000
+            );
+            return;
+          }
+
+          const { error: servicioError } = await supabase
+            .from("servicios")
+            .delete()
+            .eq("id", info.id);
+
+          if (servicioError) {
+            toastShow(
+              toast,
+              "error",
+              "Error",
+              "No se pudo eliminar el servicio",
               3000
             );
           } else {
@@ -155,6 +171,12 @@ const ServiciosScreen = () => {
     }
 
     setLoading(true);
+
+    await supabase
+      .from("servicios_detalles")
+      .update({ id_estado: selectedEstado })
+      .eq("id_servicio", selectedinfo.id)
+      .select();
 
     const { error } = await supabase
       .from("servicios")
@@ -217,7 +239,7 @@ const ServiciosScreen = () => {
       <Toast ref={toast} />
       <ConfirmDialog />
       <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <h1 className="sm:text-3xl text-2xl font-bold">Servicios</h1>
           <Button
             icon="pi pi-sync"

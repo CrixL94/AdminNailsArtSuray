@@ -11,19 +11,26 @@ import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { Card } from "primereact/card";
 import { MultiSelect } from "primereact/multiselect";
 import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
+import DetallesServiciosCRUD from "./DetallesServiciosCRUD";
 
 const DetallesServiciosScreen = () => {
   const menuRef = useRef<Menu[]>([]);
   const toast = useRef<Toast>(null!);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any[]>([]);
-  const [estados, setEstados] = useState<{ label: string; value: number }[]>([]);
+  const [estados, setEstados] = useState<{ label: string; value: number }[]>(
+    []
+  );
   const [dialogEstadoVisible, setDialoEstadogVisible] = useState(false);
   const [selectedTestimonio, setSelectedTestimonio] = useState<any>(null);
   const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
 
-  const [servicios, setServicios] = useState<{ label: string; value: number }[]>([]);
+  const [servicios, setServicios] = useState<
+    { label: string; value: number }[]
+  >([]);
   const [selectedServicios, setSelectedServicios] = useState<number[]>([]);
+  const [editar, setEditar] = useState<any>(null);
+  const [dialogVisible, setDialogVisible] = useState(false);
 
   const getInfo = async () => {
     setLoading(true);
@@ -33,7 +40,7 @@ const DetallesServiciosScreen = () => {
 
     const { data: serviciosData } = await supabase
       .from("servicios")
-      .select("id, nombre");
+      .select("id, nombre, id_estado");
 
     const { data: estadosData } = await supabase
       .from("Estados")
@@ -41,6 +48,10 @@ const DetallesServiciosScreen = () => {
 
     const estadosFiltrados = (estadosData || []).filter((estado: any) =>
       [1, 2].includes(estado.IdEstado)
+    );
+
+    const serviciosFiltardos = (serviciosData || []).filter((estado: any) =>
+      [1].includes(estado.id_estado)
     );
 
     setEstados(
@@ -51,7 +62,7 @@ const DetallesServiciosScreen = () => {
     );
 
     setServicios(
-      (serviciosData || []).map((s) => ({
+      (serviciosFiltardos).map((s) => ({
         label: s.nombre,
         value: s.id,
       }))
@@ -81,7 +92,6 @@ const DetallesServiciosScreen = () => {
     });
   };
 
-  // Abrir dialog
   const abrirDialogEstados = (testimonio: any) => {
     setSelectedTestimonio(testimonio);
     setSelectedEstado(testimonio.id_estado);
@@ -91,6 +101,11 @@ const DetallesServiciosScreen = () => {
   // Manejar cambio en checkbox
   const onEstadoChange = (estadoValue: number) => {
     setSelectedEstado(estadoValue);
+  };
+
+  const abrirDialog = (info?: any) => {
+    setEditar(info);
+    setDialogVisible(true);
   };
 
   const guardarEstado = async () => {
@@ -145,6 +160,11 @@ const DetallesServiciosScreen = () => {
   const getActionItems = (info: any) => {
     const items = [
       {
+        label: "Editar",
+        icon: "pi pi-pencil",
+        command: () => abrirDialog(info),
+      },
+      {
         label: "Eliminar",
         icon: "pi pi-trash",
         command: () => eliminar(info),
@@ -159,11 +179,11 @@ const DetallesServiciosScreen = () => {
 
   const columns = [
     // { header: "ID", field: "id", sortable: true },
+    { header: "Servicio", field: "servicio_principal", sortable: true },
     { header: "Detalle Servicio", field: "nombre", sortable: true },
     { header: "Descripcion", field: "descripcion", sortable: true },
     { header: "Precio", field: "precio", sortable: true },
     { header: "Tiempo (Minutos)", field: "duracion_minutos", sortable: true },
-    { header: "Servicio", field: "servicio_principal", sortable: true },
     {
       header: "Estado",
       field: "NombreEstado",
@@ -214,13 +234,20 @@ const DetallesServiciosScreen = () => {
       <Toast ref={toast} />
       <ConfirmDialog />
       <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <h1 className="sm:text-3xl text-2xl font-bold">Detalles Servicios</h1>
           <Button
             icon="pi pi-sync"
             rounded
             aria-label="Filter"
             onClick={() => getInfo()}
+          />
+
+          <Button
+            icon="pi pi-plus"
+            rounded
+            severity="success"
+            onClick={() => abrirDialog()}
           />
 
           <div className="hidden sm:block">
@@ -338,6 +365,13 @@ const DetallesServiciosScreen = () => {
           )}
         </div>
       </main>
+
+      <DetallesServiciosCRUD
+        visible={dialogVisible}
+        onHide={() => setDialogVisible(false)}
+        editar={editar}
+        getInfo={getInfo}
+      />
 
       <DialogCambiarEstado
         dialogEstadoVisible={dialogEstadoVisible}
