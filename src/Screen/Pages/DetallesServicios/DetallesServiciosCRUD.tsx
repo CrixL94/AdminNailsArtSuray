@@ -14,11 +14,13 @@ const DetallesServiciosCRUD = ({
   onHide,
   editar = null,
   getInfo,
+  idServicioPrincipal,
 }: {
   visible: boolean;
   onHide: () => void;
   editar?: any;
   getInfo: () => void;
+  idServicioPrincipal?: any;
 }) => {
   const toast = useRef<Toast>(null!);
   const editando = !!editar;
@@ -214,9 +216,16 @@ const DetallesServiciosCRUD = ({
         });
       } else {
         resetForm();
+        if (idServicioPrincipal) {
+          setValues((prevValues) => ({
+            ...prevValues,
+            id_servicio: idServicioPrincipal,
+          }));
+        }
       }
     }
-  }, [visible]);
+  }, [visible, idServicioPrincipal]);
+
   return (
     <div>
       <Toast ref={toast} />

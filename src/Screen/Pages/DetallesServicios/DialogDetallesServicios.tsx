@@ -1,34 +1,37 @@
-import { useEffect, useRef, useState } from "react";
-import { Toast } from "primereact/toast";
-import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
 import { supabase } from "../../../supabaseClient";
-import { toastShow } from "../../../Services/ToastService";
-import Loading from "../../../Components/Loader";
-import { Menu } from "primereact/menu";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "primereact/badge";
-import DataTable from "../../../Components/DataTable";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { Button } from "primereact/button";
 import { Card } from "primereact/card";
-import { MultiSelect } from "primereact/multiselect";
-import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
+import DataTable from "../../../Components/DataTable";
+import Loading from "../../../Components/Loader";
 import DetallesServiciosCRUD from "./DetallesServiciosCRUD";
+import { confirmDialog } from "primereact/confirmdialog";
+import { toastShow } from "../../../Services/ToastService";
+import { Menu } from "primereact/menu";
+import { Toast } from "primereact/toast";
+import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
 
-const DetallesServiciosScreen = () => {
+const DialogDetallesServicios = ({
+  visible,
+  selectedinfo,
+  onHide,
+}: {
+  visible: boolean;
+  selectedinfo: any;
+  onHide: () => void;
+}) => {
   const menuRef = useRef<Menu[]>([]);
   const toast = useRef<Toast>(null!);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any[]>([]);
-  const [estados, setEstados] = useState<{ label: string; value: number }[]>(
-    []
-  );
   const [dialogEstadoVisible, setDialoEstadogVisible] = useState(false);
   const [selected, setSelected] = useState<any>(null);
   const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
-
-  const [servicios, setServicios] = useState<
-    { label: string; value: number }[]
-  >([]);
-  const [selectedServicios, setSelectedServicios] = useState<number[]>([]);
+  const [estados, setEstados] = useState<{ label: string; value: number }[]>(
+    []
+  );
   const [editar, setEditar] = useState<any>(null);
   const [dialogVisible, setDialogVisible] = useState(false);
 
@@ -38,20 +41,12 @@ const DetallesServiciosScreen = () => {
       .from("vta_detalles_servicios")
       .select("*");
 
-    const { data: serviciosData } = await supabase
-      .from("servicios")
-      .select("id, nombre, id_estado");
-
     const { data: estadosData } = await supabase
       .from("Estados")
       .select("IdEstado, NombreEstado");
 
     const estadosFiltrados = (estadosData || []).filter((estado: any) =>
       [1, 2].includes(estado.IdEstado)
-    );
-
-    const serviciosFiltardos = (serviciosData || []).filter((estado: any) =>
-      [1].includes(estado.id_estado)
     );
 
     setEstados(
@@ -61,15 +56,29 @@ const DetallesServiciosScreen = () => {
       }))
     );
 
-    setServicios(
-      (serviciosFiltardos).map((s) => ({
-        label: s.nombre,
-        value: s.id,
-      }))
+    const detallesFiltrados = (detalles || []).filter(
+      (item: any) => item.id_servicio === selectedinfo?.id
     );
-    setData(detalles || []);
+
+    setData(detallesFiltrados);
 
     setLoading(false);
+  };
+
+  const abrirDialog = (info?: any) => {
+    setEditar(info);
+    setDialogVisible(true);
+  };
+
+  const abrirDialogEstados = (info: any) => {
+    setSelected(info);
+    setSelectedEstado(info.id_estado);
+    setDialoEstadogVisible(true);
+  };
+
+  // Manejar cambio en checkbox
+  const onEstadoChange = (estadoValue: number) => {
+    setSelectedEstado(estadoValue);
   };
 
   const eliminar = async (info: any) => {
@@ -92,71 +101,6 @@ const DetallesServiciosScreen = () => {
     });
   };
 
-  const abrirDialogEstados = (testimonio: any) => {
-    setSelected(testimonio);
-    setSelectedEstado(testimonio.id_estado);
-    setDialoEstadogVisible(true);
-  };
-
-  // Manejar cambio en checkbox
-  const onEstadoChange = (estadoValue: number) => {
-    setSelectedEstado(estadoValue);
-  };
-
-  const abrirDialog = (info?: any) => {
-    setEditar(info);
-    setDialogVisible(true);
-  };
-
-  const guardarEstado = async () => {
-    if (selectedEstado === 3) {
-      toastShow(
-        toast,
-        "error",
-        "Error de validación",
-        "Es requerido un estado",
-        3000
-      );
-      return;
-    }
-
-    setLoading(true);
-
-    const { error } = await supabase
-      .from("servicios_detalles")
-      .update({ id_estado: selectedEstado })
-      .eq("id", selected.id)
-      .select();
-
-    if (error) {
-      toastShow(
-        toast,
-        "error",
-        "Error",
-        "No se pudo actualizar el estado",
-        3000
-      );
-    } else {
-      toastShow(
-        toast,
-        "success",
-        "Éxito",
-        "Estado actualizado correctamente",
-        3000
-      );
-      setDialoEstadogVisible(false);
-      getInfo();
-    }
-
-    setLoading(false);
-  };
-
-  const cerrarDialog = () => {
-    setSelected(null);
-    setSelectedEstado(null);
-    setDialoEstadogVisible(false);
-  };
-
   const getActionItems = (info: any) => {
     const items = [
       {
@@ -172,10 +116,6 @@ const DetallesServiciosScreen = () => {
     ];
     return items;
   };
-
-  const filteredData = selectedServicios.length
-    ? data.filter((d) => selectedServicios.includes(d.id_servicio))
-    : data;
 
   const columns = [
     // { header: "ID", field: "id", sortable: true },
@@ -225,61 +165,109 @@ const DetallesServiciosScreen = () => {
     },
   ];
 
+  const cerrarDialog = () => {
+    onHide();
+  };
+
+  const guardarEstado = async () => {
+    if (selectedEstado === 3) {
+      toastShow(
+        toast,
+        "error",
+        "Error de validación",
+        "Es requerido un estado",
+        3000
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from("servicios_detalles")
+      .update({ id_estado: selectedEstado })
+      .eq("id", selected.id)
+      .select();
+
+    if (error) {
+      toastShow(
+        toast,
+        "error",
+        "Error",
+        "No se pudo actualizar el estado",
+        3000
+      );
+    } else {
+      toastShow(
+        toast,
+        "success",
+        "Éxito",
+        "Estado actualizado correctamente",
+        3000
+      );
+      setDialoEstadogVisible(false);
+      getInfo();
+    }
+
+    setLoading(false);
+  };
+
+  const cerrarDialogEstado = () => {
+    setSelected(null);
+    setSelectedEstado(null);
+    setDialoEstadogVisible(false);
+  };
+
   useEffect(() => {
-    getInfo();
-  }, []);
-
+    if (visible) {
+      getInfo();
+    }
+  }, [visible]);
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div>
       <Toast ref={toast} />
-      <ConfirmDialog />
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Detalles Servicios</h1>
-          <Button
-            icon="pi pi-sync"
-            rounded
-            aria-label="Filter"
-            onClick={() => getInfo()}
-          />
+      {/* <ConfirmDialog /> */}
+      <Dialog
+        header={
+          <div className="sm:flex sm:items-center gap-3 mb-4">
+            <h1 className="sm:text-3xl text-2xl">Detalles Servicios</h1>
+            <div className="flex gap-3 mt-3">
+              <Button
+                icon="pi pi-sync"
+                rounded
+                aria-label="Filter"
+                onClick={() => getInfo()}
+              />
 
-          <Button
-            icon="pi pi-plus"
-            rounded
-            severity="success"
-            onClick={() => abrirDialog()}
-          />
-
-          <div className="hidden sm:block">
-            <MultiSelect
-              value={selectedServicios}
-              options={servicios}
-              onChange={(e) => setSelectedServicios(e.value)}
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Filtar por Servicio"
-              className="w-full"
-              display="chip"
-            />
+              <Button
+                icon="pi pi-plus"
+                rounded
+                severity="success"
+                onClick={() => abrirDialog()}
+              />
+            </div>
           </div>
-        </div>
-
-        <div className="my-3 sm:hidden">
-          <MultiSelect
-            value={selectedServicios}
-            options={servicios}
-            onChange={(e) => setSelectedServicios(e.value)}
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Selecciona servicios"
-            className="w-full"
-            display="chip"
-          />
-        </div>
-
-        <div className="sm:bg-white sm:rounded sm:shadow sm:p-4 h-[52rem] overflow-y-auto">
+        }
+        visible={visible}
+        className="sm:w-[75%] w-full sm:p-0 p-2"
+        modal
+        onHide={() => {
+          cerrarDialog();
+        }}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={cerrarDialog}
+              className="text-gray-700 hover:text-gray-800"
+            >
+              Cerrar
+            </button>
+          </div>
+        }
+      >
+        <div className="sm:bg-gray-100 sm:rounded sm:shadow sm:p-4 overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center h-screen">
+            <div className="flex items-center justify-center">
               <Loading loading={loading} />
             </div>
           ) : (
@@ -288,7 +276,7 @@ const DetallesServiciosScreen = () => {
               <div className="hidden sm:block">
                 <DataTable
                   columns={columns}
-                  data={filteredData}
+                  data={data}
                   striped
                   hover
                   rows={5}
@@ -297,9 +285,12 @@ const DetallesServiciosScreen = () => {
 
               {/* Tarjetas para pantallas pequeñas */}
               <div className="sm:hidden">
-                <div className="flex flex-col gap-4 h-[85vh] overflow-y-auto">
-                  {filteredData.map((info, index) => (
-                    <div key={info.id} className="relative">
+                <div className="flex flex-col gap-4 overflow-y-auto">
+                  {data.map((info, index) => (
+                    <div
+                      key={info.id}
+                      className="relative border-1 border-gray-100 rounded shadow-2xs"
+                    >
                       <div className="absolute top-2 right-2 flex items-center gap-2">
                         <Badge
                           value={info.NombreEstado}
@@ -364,18 +355,19 @@ const DetallesServiciosScreen = () => {
             </>
           )}
         </div>
-      </main>
+      </Dialog>
 
       <DetallesServiciosCRUD
         visible={dialogVisible}
         onHide={() => setDialogVisible(false)}
         editar={editar}
         getInfo={getInfo}
+        idServicioPrincipal={selectedinfo?.id}
       />
 
       <DialogCambiarEstado
         dialogEstadoVisible={dialogEstadoVisible}
-        cerrarDialog={cerrarDialog}
+        cerrarDialog={cerrarDialogEstado}
         guardarEstado={guardarEstado}
         estados={estados}
         onEstadoChange={onEstadoChange}
@@ -385,4 +377,4 @@ const DetallesServiciosScreen = () => {
   );
 };
 
-export default DetallesServiciosScreen;
+export default DialogDetallesServicios;

@@ -11,6 +11,7 @@ import { toastShow } from "../../../Services/ToastService";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
 import { useNavigate } from "react-router-dom";
+import DialogDetallesServicios from "../DetallesServicios/DialogDetallesServicios";
 
 const ServiciosScreen = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const ServiciosScreen = () => {
   const [dialogEstadoVisible, setDialogEstadoVisible] = useState(false);
   const [selectedinfo, setSelectedInfo] = useState<any>(null);
   const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
+  const [dialogDetallesVisible, setDialogDetallesVisible] = useState(false);
 
   const getInfo = async () => {
     setLoading(true);
@@ -229,6 +231,16 @@ const ServiciosScreen = () => {
     return items;
   };
 
+  //Dialog detalles
+  const dialogDetalles = (info: any) => {
+    setSelectedInfo(info);
+    setDialogDetallesVisible(true);
+  };
+  const onHide = () => {
+    setSelectedInfo(null);
+    setDialogDetallesVisible(false);
+  };
+
   useEffect(() => {
     getInfo();
     fetchEstados();
@@ -325,7 +337,7 @@ const ServiciosScreen = () => {
 
                       <div className="flex justify-end">
                         <button
-                          onClick={() => console.log("Ver detalles")}
+                          onClick={() => dialogDetalles(servicio)}
                           className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-full shadow-md hover:bg-purple-700 transition duration-300"
                         >
                           Detalles<i className="pi pi-eye"></i>
@@ -355,6 +367,12 @@ const ServiciosScreen = () => {
         estados={estados}
         onEstadoChange={onEstadoChange}
         selectedEstado={selectedEstado}
+      />
+
+      <DialogDetallesServicios
+        visible={dialogDetallesVisible}
+        selectedinfo={selectedinfo}
+        onHide={onHide}
       />
     </div>
   );
