@@ -71,6 +71,9 @@ const AdminLayout = () => {
             <NavLink to="/usuarios" className={navLinkClass}>
               <i className="pi pi-users mr-2" /> Usuarios
             </NavLink>
+            <NavLink to="/mensajes" className={navLinkClass}>
+              <i className="pi pi-comments mr-2" /> Mensajes
+            </NavLink>
             <NavLink to="/testimonios" className={navLinkClass}>
               <i className="pi pi-list mr-2" /> Testimonios
             </NavLink>
@@ -127,6 +130,14 @@ const AdminLayout = () => {
                 onClick={() => setSidebarOpen(false)}
               >
                 <i className="pi pi-users mr-2" /> Usuarios
+              </NavLink>
+              <Divider />
+              <NavLink
+                to="/mensajes"
+                className={navLinkClass}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <i className="pi pi-comments mr-2" /> Mensajes
               </NavLink>
               <Divider />
               <NavLink
