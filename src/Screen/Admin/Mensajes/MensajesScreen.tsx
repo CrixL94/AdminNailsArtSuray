@@ -240,7 +240,7 @@ const MensajesScreen = () => {
       <ConfirmDialog />
       <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
         <div className="flex items-center gap-3 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Detalles Servicios</h1>
+          <h1 className="sm:text-3xl text-2xl font-bold">Mensajes Recibidos</h1>
           <Button
             icon="pi pi-sync"
             rounded
