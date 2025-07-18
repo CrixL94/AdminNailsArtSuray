@@ -377,10 +377,6 @@ const ServiciosCRUD = ({
                   <i className="pi pi-image text-4xl text-gray-500"></i>
                 </div>
               )}
-
-              {/* {error.imagen_url && (
-                <small className="p-error">Imagen de fondo es requerida</small>
-              )} */}
             </div>
           </form>
         </div>

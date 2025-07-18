@@ -54,6 +54,14 @@ const AdminLayout = () => {
         navigate("detalles/servicios");
       },
     },
+    {
+      label: "Galería",
+      icon: "pi pi-images",
+      command: () => {
+        setSidebarOpen(false);
+        navigate("galeria");
+      },
+    },
   ];
 
   return (
