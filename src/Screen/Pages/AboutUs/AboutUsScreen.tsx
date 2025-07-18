@@ -6,6 +6,7 @@ import { supabase } from "../../../supabaseClient";
 import { Button } from "primereact/button";
 import Loading from "../../../Components/Loader";
 import { Card } from "primereact/card";
+import AboutUsCRUD from "./AboutUsCRUD";
 
 const AboutUsScreen = () => {
   const toast = useRef<Toast>(null!);
@@ -173,6 +174,14 @@ const AboutUsScreen = () => {
           )}
         </div>
       </main>
+
+      <AboutUsCRUD
+        visible={dialogVisible}
+        onHide={() => setDialogVisible(false)}
+        editar={editar}
+        filesData={filesData}
+        getInfo={fetchInicioData}
+      />
     </div>
   );
 };

@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Toast } from "primereact/toast";
 import { supabase } from "../../../supabaseClient";
 import { useForm } from "../../../Hooks/useForm";
-import { Dropdown } from "primereact/dropdown";
-import { InputTextarea } from "primereact/inputtextarea";
-import Loading from "../../../Components/Loader";
-import { InputText } from "primereact/inputtext";
 import { Dialog } from "primereact/dialog";
 import { toastShow } from "../../../Services/ToastService";
+import Loading from "../../../Components/Loader";
+import { InputText } from "primereact/inputtext";
+import { Dropdown } from "primereact/dropdown";
+import { InputTextarea } from "primereact/inputtextarea";
 
-const ServiciosCRUD = ({
+const AboutUsCRUD = ({
   visible,
   onHide,
   editar = null,
@@ -36,24 +36,20 @@ const ServiciosCRUD = ({
     const { data } = await supabase
       .from("Estados")
       .select("IdEstado, NombreEstado");
-
-    const estadosFiltrados = (data || []).filter((estado: any) =>
-      [1, 2].includes(estado.IdEstado)
-    );
-
     setEstados(
-      estadosFiltrados.map((e: any) => ({
-        label: e.NombreEstado,
-        value: e.IdEstado,
-      }))
+      data
+        ? data.map((e: any) => ({ label: e.NombreEstado, value: e.IdEstado }))
+        : []
     );
   };
 
   const initialValues = {
-    nombre: "",
+    titulo: "",
+    subtitulo: "",
     descripcion: "",
     imagen_url: "",
-    id_estado: 1,
+    mision: "",
+    vision: "",
   };
 
   const { values, handleInputChange, resetForm, setValues, setError, error } =
@@ -63,8 +59,13 @@ const ServiciosCRUD = ({
     let isValid = true;
     let errores: Record<string, boolean> = {};
 
-    if (!values.nombre.trim()) {
-      errores.nombre = true;
+    if (!values.titulo.trim()) {
+      errores.titulo = true;
+      isValid = false;
+    }
+
+    if (!values.subtitulo.trim()) {
+      errores.subtitulo = true;
       isValid = false;
     }
 
@@ -73,13 +74,17 @@ const ServiciosCRUD = ({
       isValid = false;
     }
 
-    // if (!values.imagen_url) {
-    //   errores.imagen_url = true;
-    //   isValid = false;
-    // }
+    if (!values.mision.trim()) {
+      errores.mision = true;
+      isValid = false;
+    }
+    if (!values.vision.trim()) {
+      errores.vision = true;
+      isValid = false;
+    }
 
-    if (!values.id_estado) {
-      errores.IdEstado = true;
+    if (!values.imagen_url) {
+      errores.imagen_url = true;
       isValid = false;
     }
 
@@ -107,33 +112,18 @@ const ServiciosCRUD = ({
 
       // Subir imagen si hay una nueva seleccionada
       if (selectedFile) {
-        const nuevoNombre = `${selectedFile.name}`;
-        const nuevaRuta = `Servicios/${nuevoNombre}`;
-
+        // Eliminar imagen anterior si estamos editando
         if (editando && values.imagen_url) {
-          const rutaAnterior = `Servicios/${values.imagen_url}`;
-
-          const { error: removeError } = await supabase.storage
+          await supabase.storage
             .from("imagenes")
-            .remove([rutaAnterior]);
-
-          if (removeError) {
-            toastShow(
-              toast,
-              "error",
-              "Error al eliminar imagen previa",
-              removeError.message,
-              3000
-            );
-            setLoading(false);
-            return;
-          }
+            .remove([`About_Us/${values.imagen_url}`]);
         }
 
         // Subir nueva imagen
+        const nuevoNombre = `${Date.now()}_${selectedFile.name}`;
         const { error: uploadError } = await supabase.storage
-          .from("imagenes")
-          .upload(nuevaRuta, selectedFile, {
+          .from("imagenes/About_Us")
+          .upload(nuevoNombre, selectedFile, {
             cacheControl: "3600",
             upsert: true,
           });
@@ -153,30 +143,24 @@ const ServiciosCRUD = ({
         imgNombre = nuevoNombre;
       }
 
-      const { nombre, descripcion, id_estado } = values;
+      const { titulo, subtitulo, descripcion, mision, vision } = values;
+
       let supabaseResponse;
-      if (editando) {
-        supabaseResponse = await supabase
-          .from("servicios")
-          .update({
-            nombre,
-            descripcion,
-            imagen_url: imgNombre,
-            id_estado,
-          })
-          .eq("id", editar.id);
-      } else {
-        supabaseResponse = await supabase.from("servicios").insert([
-          {
-            nombre,
-            descripcion,
-            imagen_url: imgNombre,
-            id_estado,
-          },
-        ]);
-      }
+      // UPDATE
+      supabaseResponse = await supabase
+        .from("about_us")
+        .update({
+          titulo,
+          subtitulo,
+          descripcion,
+          imagen_url: imgNombre,
+          mision,
+          vision,
+        })
+        .eq("id", editar.id);
 
       if (supabaseResponse.error) {
+        console.error("Error:", supabaseResponse.error);
         toastShow(
           toast,
           "error",
@@ -204,6 +188,7 @@ const ServiciosCRUD = ({
       }, 1000);
     } catch (error: any) {
       toastShow(toast, "error", "Error inesperado", error.message, 3000);
+      setLoading(false);
     }
 
     setLoading(false);
@@ -227,10 +212,12 @@ const ServiciosCRUD = ({
         const nombre = url ? url.split("/").pop() : "";
 
         setValues({
-          nombre: editar.nombre || "",
+          titulo: editar.titulo || "",
+          subtitulo: editar.subtitulo || "",
           descripcion: editar.descripcion || "",
           imagen_url: nombre || "",
-          id_estado: editar.id_estado || 1,
+          mision: editar.mision || "",
+          vision: editar.vision || "",
         });
       } else {
         resetForm();
@@ -239,10 +226,10 @@ const ServiciosCRUD = ({
   }, [visible]);
 
   return (
-    <div>
+    <>
       <Toast ref={toast} />
       <Dialog
-        header={editando ? "Editar Servicio" : "Nuevo Servicio"}
+        header={editando ? "Editar Registro" : "Nuevo Registro"}
         visible={visible}
         className="sm:w-1/2 w-full sm:p-0 p-2"
         modal
@@ -276,44 +263,81 @@ const ServiciosCRUD = ({
           )}
 
           <form className="sm:flex sm:flex-wrap flex-col w-full gap-4 mt-4">
-            <div className="sm:flex gap-3 mb-4">
-              <div className="sm:w-1/2 w-full">
-                <label htmlFor="nombre" className="font-bold block mb-2">
-                  Nombre Servicio
+            <div className="flex flex-wrap gap-3 mb-4">
+              <div className="flex-auto">
+                <label htmlFor="titulo" className="font-bold block mb-2">
+                  Titulo
                 </label>
                 <InputText
-                  id="nombre"
-                  name="nombre"
-                  value={values?.nombre}
+                  id="titulo"
+                  name="titulo"
+                  value={values?.titulo}
                   onChange={handleInputChange}
                   className="w-full"
                 />
-                {error.nombre && (
+                {error.titulo && (
                   <small className="p-error">Titulo es requerido</small>
                 )}
               </div>
 
-              <div className="sm:w-1/2 sm:mt-0 mt-4 w-full">
-                <label htmlFor="id_estado" className="font-bold block mb-2">
-                  Estado
+              <div className="flex-auto">
+                <label htmlFor="subtitulo" className="font-bold block mb-2">
+                  Sub Titulo
                 </label>
-                <Dropdown
-                  id="id_estado"
-                  name="id_estado"
-                  value={values?.id_estado}
-                  options={estados}
+                <InputText
+                  id="subtitulo"
+                  name="subtitulo"
+                  value={values?.subtitulo}
                   onChange={handleInputChange}
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Selecciona un estado"
                   className="w-full"
                 />
+                {error.subtitulo && (
+                  <small className="p-error">Sub Titulo es requerido</small>
+                )}
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3 mb-4">
               <div className="flex-auto">
-                <label htmlFor="nombre" className="font-bold block mb-2">
+                <label htmlFor="mision" className="font-bold block mb-2">
+                  Misión
+                </label>
+                <InputTextarea
+                  id="mision"
+                  name="mision"
+                  value={values?.mision}
+                  onChange={handleInputChange}
+                  className="w-full"
+                  rows={5}
+                  cols={30}
+                />
+                {error.mision && (
+                  <small className="p-error">Misión es requerida</small>
+                )}
+              </div>
+
+              <div className="flex-auto">
+                <label htmlFor="vision" className="font-bold block mb-2">
+                  Visión
+                </label>
+                <InputTextarea
+                  id="vision"
+                  name="vision"
+                  value={values?.vision}
+                  onChange={handleInputChange}
+                  className="w-full"
+                  rows={5}
+                  cols={30}
+                />
+                {error.vision && (
+                  <small className="p-error">Visión es requerida</small>
+                )}
+              </div>
+            </div>
+
+            <div className="sm:flex gap-3 mb-4">
+              <div className="w-full">
+                <label htmlFor="Email" className="font-bold block mb-2">
                   Descripción
                 </label>
                 <InputTextarea
@@ -326,7 +350,7 @@ const ServiciosCRUD = ({
                   cols={30}
                 />
                 {error.descripcion && (
-                  <small className="p-error">Descripcion es requerido</small>
+                  <small className="p-error">Descripción es requerida</small>
                 )}
               </div>
             </div>
@@ -337,7 +361,7 @@ const ServiciosCRUD = ({
                 className="font-bold block mb-2 cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
-                Imagen (haz clic en la imagen para cambiar)
+                Imagen de Fondo (haz clic en la imagen para cambiar)
               </label>
 
               {/* input oculto */}
@@ -354,7 +378,7 @@ const ServiciosCRUD = ({
                 className="hidden"
               />
 
-              {selectedFile || values.imagen_url ? (
+              {(selectedFile || values.imagen_url) && (
                 <img
                   src={
                     selectedFile
@@ -363,23 +387,21 @@ const ServiciosCRUD = ({
                           (img: any) => img.nombre === values.imagen_url
                         )?.url
                   }
+                  alt="Vista previa"
                   onClick={() => fileInputRef.current?.click()}
                   className="mt-2 rounded shadow-md w-full object-cover cursor-pointer hover:opacity-80 transition-opacity duration-200"
                 />
-              ) : (
-                <div
-                  className="mt-2 rounded shadow-md w-full h-48 bg-gray-200 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <i className="pi pi-image text-4xl text-gray-500"></i>
-                </div>
+              )}
+
+              {error.imagen_url_fondo && (
+                <small className="p-error">Imagen de fondo es requerida</small>
               )}
             </div>
           </form>
         </div>
       </Dialog>
-    </div>
+    </>
   );
 };
 
-export default ServiciosCRUD;
+export default AboutUsCRUD;
