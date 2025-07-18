@@ -11,6 +11,7 @@ import ServiciosScreen from "../Screen/Pages/Servicios/ServiciosScreen";
 import DetallesServiciosScreen from "../Screen/Pages/DetallesServicios/DetallesServiciosScreen";
 import MensajesScreen from "../Screen/Admin/Mensajes/MensajesScreen";
 import GaleriaScreen from "../Screen/Pages/Galeria/GaleriaScreen";
+import CitasScreen from "../Screen/Admin/Citas/CitasScreen";
 
 const AppRouter = () => {
   return (
@@ -33,6 +34,7 @@ const AppRouter = () => {
           <Route path="usuarios" element={<UsuariosScreen />} />
           <Route path="aboutUs" element={<AboutUsScreen />} />
           <Route path="inicio" element={<InicioScreen />} />
+          <Route path="citas" element={<CitasScreen />} />
           <Route path="testimonios" element={<TestimoniosScreen />} />
           <Route path="mensajes" element={<MensajesScreen />} />
           <Route path="servicios" element={<ServiciosScreen />} />

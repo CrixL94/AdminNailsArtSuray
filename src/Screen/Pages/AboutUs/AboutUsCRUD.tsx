@@ -5,9 +5,8 @@ import { useForm } from "../../../Hooks/useForm";
 import { Dialog } from "primereact/dialog";
 import { toastShow } from "../../../Services/ToastService";
 import Loading from "../../../Components/Loader";
-import { InputText } from "primereact/inputtext";
-import { Dropdown } from "primereact/dropdown";
 import { InputTextarea } from "primereact/inputtextarea";
+import { InputText } from "primereact/inputtext";
 
 const AboutUsCRUD = ({
   visible,
@@ -26,22 +25,8 @@ const AboutUsCRUD = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editando = !!editar;
 
-  const [estados, setEstados] = useState<{ label: string; value: number }[]>(
-    []
-  );
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const fetchEstados = async () => {
-    const { data } = await supabase
-      .from("Estados")
-      .select("IdEstado, NombreEstado");
-    setEstados(
-      data
-        ? data.map((e: any) => ({ label: e.NombreEstado, value: e.IdEstado }))
-        : []
-    );
-  };
 
   const initialValues = {
     titulo: "",
@@ -200,10 +185,6 @@ const AboutUsCRUD = ({
     setSelectedFile(null);
     onHide();
   };
-
-  useEffect(() => {
-    fetchEstados();
-  }, []);
 
   useEffect(() => {
     if (visible) {

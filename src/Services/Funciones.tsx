@@ -99,3 +99,64 @@ export async function listarUrlsPublicasRaiz(
 
   return urls;
 }
+
+//FORMATEAR HORA A AM/PM
+export const formatearHoraAMPM = (hora: string) => {
+  const [h, m] = hora.split(":").map(Number);
+  const fecha = new Date();
+  fecha.setHours(h, m);
+
+  return fecha.toLocaleTimeString("es-HN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+export const sumarUnaHora = (hora: string) => {
+  const [h, m, s] = hora.split(":").map(Number);
+  const fecha = new Date();
+  fecha.setHours(h, m, s || 0);
+  fecha.setHours(fecha.getHours() + 1);
+  return fecha.toISOString().slice(11, 19);
+};
+
+export const formatearDiaMesAno = (fechaString: string) => {
+  // Extraemos partes año, mes, día para construir fecha local
+  const [año, mes, dia] = fechaString.split("-").map(Number);
+  // Mes en JS es base 0, por eso restamos 1
+  const fecha = new Date(año, mes - 1, dia);
+
+  if (isNaN(fecha.getTime())) return fechaString;
+
+  const diasSemana = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+  ];
+  const meses = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
+
+  const diaSemana = diasSemana[fecha.getDay()];
+  const diaMes = fecha.getDate();
+  const mesNombre = meses[fecha.getMonth()];
+  const añoNum = fecha.getFullYear();
+
+  return `${diaSemana} ${diaMes} de ${mesNombre} de ${añoNum}`;
+};
