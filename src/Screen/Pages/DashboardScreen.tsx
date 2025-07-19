@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
+import CitasScreen from "../Admin/Citas/CitasScreen";
 
 const DashboardScreen = () => {
   const [nombre, setNombre] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
-      const {data: { user }} = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (user) {
         const userEmail = user.email;
@@ -31,14 +34,12 @@ const DashboardScreen = () => {
 
   return (
     <div className="flex w-full h-screen overflow-hidden overflow-y-auto">
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <h1 className="sm:text-3xl sm:text-left text-2xl text-center font-bold mb-4">¡Bienvenido {nombre}!</h1>
-        <div className="bg-white rounded shadow p-4">
-          <h2 className="text-lg font-semibold mb-2">Resumen</h2>
-          <p className="text-sm text-gray-500">
-            Agrega aquí tus datos, tablas o widgets.
-          </p>
-        </div>
+      <main className="flex-1 bg-gray-100 relative">
+        <h1 className="sticky top-0 z-10 bg-gray-100 sm:text-3xl sm:text-left text-2xl text-center font-bold py-4 mb-4 sm:p-6 p-2">
+          ¡Bienvenido {nombre}!
+        </h1>
+
+        <CitasScreen />
       </main>
     </div>
   );
