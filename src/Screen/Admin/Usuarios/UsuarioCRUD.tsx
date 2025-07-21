@@ -106,7 +106,7 @@ const UsuarioCRUD = ({
       setLoading(true);
       if (!editando) {
         // Registrar en auth
-        const { data: authUser, error: authError } = await supabase.auth.signUp(
+        const { error: authError } = await supabase.auth.signUp(
           {
             email: Email,
             password: Password,
