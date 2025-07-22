@@ -146,8 +146,7 @@ const MensajesScreen = () => {
     let mensaje = `*Hola ${info.nombre}*, recibí tu mensaje por la web. A continuación te detallo nuestros servicios:\n\n`;
 
     serviciosFiltrados.forEach((servicio, index) => {
-      mensaje += `*${index + 1}.* *${servicio.nombre}*
-      }*\n`;
+      mensaje += `*${index + 1}.* *${servicio.nombre}*\n`;
     });
 
     mensaje += `\n*Nail's Art Suray*\n_¿Lista para lucir tus uñas?_\n*Reserva tu cita ahora* y déjanos consentirte como te mereces`;
