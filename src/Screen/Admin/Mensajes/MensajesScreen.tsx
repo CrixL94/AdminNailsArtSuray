@@ -146,8 +146,7 @@ const MensajesScreen = () => {
     let mensaje = `*Hola ${info.nombre}*, recibí tu mensaje por la web. A continuación te detallo nuestros servicios:\n\n`;
 
     serviciosFiltrados.forEach((servicio, index) => {
-      mensaje += `*${index + 1}.* *${servicio.nombre}* - *L.${
-        servicio.precio
+      mensaje += `*${index + 1}.* *${servicio.nombre}*
       }*\n`;
     });
 
