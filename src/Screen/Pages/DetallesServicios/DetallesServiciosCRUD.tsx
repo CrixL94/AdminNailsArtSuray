@@ -101,6 +101,11 @@ const DetallesServiciosCRUD = ({
       isValid = false;
     }
 
+    if (!values.duracion_minutos) {
+      errores.duracion_minutos = true;
+      isValid = false;
+    }
+
     if (!values.id_estado) {
       errores.id_estado = true;
       isValid = false;
@@ -297,7 +302,7 @@ const DetallesServiciosCRUD = ({
                   className="w-full"
                 />
                 {error.nombre && (
-                  <small className="p-error">Campo es requerido</small>
+                  <small className="p-error">Detalle es requerido</small>
                 )}
               </div>
             </div>
@@ -335,7 +340,7 @@ const DetallesServiciosCRUD = ({
                   className="w-full"
                 />
                 {error.duracion_minutos && (
-                  <small className="p-error">Campo es requerido</small>
+                  <small className="p-error">Tiempo es requerido</small>
                 )}
               </div>
             </div>
