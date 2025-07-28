@@ -5,6 +5,7 @@ import { Sidebar } from "primereact/sidebar";
 import { Divider } from "primereact/divider";
 import { Menu } from "primereact/menu";
 import { Button } from "primereact/button";
+import logo from "../assets/logoprimario.png";
 
 const AdminLayout = () => {
   const menuPages = useRef<Menu>(null);
@@ -68,9 +69,9 @@ const AdminLayout = () => {
     <div className="flex h-screen overflow-hidden">
       <aside className="hidden md:flex flex-col w-64 bg-white shadow-md p-4 justify-between">
         <div>
-          <h2 className="text-xl font-bold mb-6 text-center">
-            NAILS ART SURAY
-          </h2>
+          <div className="flex flex-col items-center mb-4">
+            <img src={logo} alt="logo"  className="w-[10rem]"/>
+          </div>
           <nav className="space-y-3">
             <NavLink to="/dashboard" className={navLinkClass}>
               <i className="pi pi-home mr-2" /> Dashboard
@@ -123,9 +124,9 @@ const AdminLayout = () => {
       >
         <div className="flex flex-col justify-between h-full">
           <div>
-            <h2 className="text-xl font-bold mb-6 text-center sm:mt-10">
-              NAILS ART SURAY
-            </h2>
+          <div className="flex flex-col items-center mb-4">
+            <img src={logo} alt="logo"  className="w-[10rem]"/>
+          </div>
             <nav className="space-y-3">
               <NavLink
                 to="/dashboard"
