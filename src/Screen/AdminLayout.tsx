@@ -5,7 +5,7 @@ import { Sidebar } from "primereact/sidebar";
 import { Divider } from "primereact/divider";
 import { Menu } from "primereact/menu";
 import { Button } from "primereact/button";
-import logo from "../assets/logoprimario.png";
+import logo from "../assets/logroprimario2.png";
 
 const AdminLayout = () => {
   const menuPages = useRef<Menu>(null);
@@ -70,7 +70,7 @@ const AdminLayout = () => {
       <aside className="hidden md:flex flex-col w-64 bg-white shadow-md p-4 justify-between">
         <div>
           <div className="flex flex-col items-center mb-4">
-            <img src={logo} alt="logo"  className="w-[10rem]"/>
+            <img src={logo} alt="logo"  className="sm:w-[15rem] w-[10rem]"/>
           </div>
           <nav className="space-y-3">
             <NavLink to="/dashboard" className={navLinkClass}>
