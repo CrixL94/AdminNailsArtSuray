@@ -103,13 +103,13 @@ const GaleriaScreen = () => {
             onClick={() => setUploadDialogVisible(true)}
           />
         </div>
-        <div className="sm:bg-white sm:rounded sm:shadow sm:h-[52rem] h-[35rem] sm:p-6 p-0 overflow-y-auto">
+        <div className="sm:bg-white sm:rounded sm:shadow h-screen sm:h-[52rem] sm:p-6 p-0 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <Loading loading={loading} />
             </div>
           ) : (
-            <div className="grid md:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-6">
+            <div className="grid md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-6">
               {filesData.map((img, index) => (
                 <div
                   key={index}
