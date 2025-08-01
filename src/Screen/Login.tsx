@@ -8,6 +8,7 @@ import { useForm } from "../Hooks/useForm";
 import { toastShow } from "../Services/ToastService";
 import { Toast } from "primereact/toast";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logroprimario2.png";
 
 const Login = () => {
   const toast = useRef<Toast>(null!);
@@ -82,7 +83,9 @@ const Login = () => {
         onSubmit={handleSubmit}
         className="sm:bg-white p-8 rounded-b-md sm:shadow-md w-full max-w-md"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+        <div className="flex flex-col items-center mb-4">
+          <img src={logo} alt="logo"  className="sm:w-[15rem] w-[10rem]"/>
+        </div>
 
         <div className="space-y-4">
           <div>
