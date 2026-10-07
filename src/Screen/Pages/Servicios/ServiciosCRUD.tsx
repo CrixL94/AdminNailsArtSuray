@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Toast } from "primereact/toast";
 import { supabase } from "../../../supabaseClient";
+import { prepararImagen } from "../../../Services/Funciones";
 import { useForm } from "../../../Hooks/useForm";
 import { Dropdown } from "primereact/dropdown";
 import { InputTextarea } from "primereact/inputtextarea";
@@ -107,7 +108,8 @@ const ServiciosCRUD = ({
 
       // Subir imagen si hay una nueva seleccionada
       if (selectedFile) {
-        const nuevoNombre = `${selectedFile.name}`;
+        // Comprimida a WebP y con nombre único
+        const { archivo, nombre: nuevoNombre } = await prepararImagen(selectedFile);
         const nuevaRuta = `Servicios/${nuevoNombre}`;
 
         if (editando && values.imagen_url) {
@@ -133,8 +135,9 @@ const ServiciosCRUD = ({
         // Subir nueva imagen
         const { error: uploadError } = await supabase.storage
           .from("imagenes")
-          .upload(nuevaRuta, selectedFile, {
-            cacheControl: "3600",
+          .upload(nuevaRuta, archivo, {
+            // El nombre nunca se repite, así que el navegador puede guardarla un año
+            cacheControl: "31536000",
             upsert: true,
           });
 

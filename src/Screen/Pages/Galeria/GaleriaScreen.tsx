@@ -4,7 +4,7 @@ import Loading from "../../../Components/Loader";
 import { Button } from "primereact/button";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { supabase } from "../../../supabaseClient";
-import UploadDialog from "./UploadDialog";
+import UploadDialog, { MAX_FOTOS_GALERIA } from "./UploadDialog";
 
 const GaleriaScreen = () => {
   const toast = useRef<Toast>(null!);
@@ -29,8 +29,9 @@ const GaleriaScreen = () => {
       return;
     }
 
+    // Se ignoran archivos internos de Supabase como ".emptyFolderPlaceholder"
     const urls = await Promise.all(
-      data.map(async (file) => {
+      data.filter((file) => !file.name.startsWith(".")).map(async (file) => {
         const { data: urlData } = supabase.storage
           .from("galeria")
           .getPublicUrl(file.name);
@@ -89,6 +90,11 @@ const GaleriaScreen = () => {
       <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
         <div className="flex items-center gap-2 mb-4">
           <h1 className="sm:text-3xl text-2xl font-bold">Galería</h1>
+          {!loading && (
+            <span className="text-sm text-gray-500">
+              {filesData.length} / {MAX_FOTOS_GALERIA} fotos
+            </span>
+          )}
           <Button
             icon="pi pi-sync"
             rounded
@@ -129,6 +135,7 @@ const GaleriaScreen = () => {
                   <img
                     src={img.url}
                     alt={img.nombre}
+                    loading="lazy"
                     className="w-full h-auto object-cover rounded-t-lg"
                   />
                 </div>

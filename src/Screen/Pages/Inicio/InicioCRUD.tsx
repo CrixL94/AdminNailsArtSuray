@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Toast } from "primereact/toast";
 import { supabase } from "../../../supabaseClient";
+import { prepararImagen } from "../../../Services/Funciones";
 import { useForm } from "../../../Hooks/useForm";
 import { Dialog } from "primereact/dialog";
 import { toastShow } from "../../../Services/ToastService";
@@ -126,12 +127,13 @@ const InicioCRUD = ({
             .remove([`inicio_web/${values.imagen_url_fondo}`]);
         }
 
-        // Subir nueva imagen
-        const nuevoNombre = `${Date.now()}_${selectedFile.name}`;
+        // Subir nueva imagen (comprimida a WebP y con nombre único)
+        const { archivo, nombre: nuevoNombre } = await prepararImagen(selectedFile);
         const { error: uploadError } = await supabase.storage
           .from("imagenes/inicio_web")
-          .upload(nuevoNombre, selectedFile, {
-            cacheControl: "3600",
+          .upload(nuevoNombre, archivo, {
+            // El nombre nunca se repite, así que el navegador puede guardarla un año
+            cacheControl: "31536000",
             upsert: true,
           });
 
