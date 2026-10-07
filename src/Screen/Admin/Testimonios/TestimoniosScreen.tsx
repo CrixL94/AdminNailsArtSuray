@@ -4,13 +4,13 @@ import { Button } from "primereact/button";
 import { supabase } from "../../../supabaseClient";
 import { toastShow } from "../../../Services/ToastService";
 import Loading from "../../../Components/Loader";
+import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
+import PageHeader from "../../../Components/PageHeader";
+import EmptyState from "../../../Components/EmptyState";
+import EstadoBadge from "../../../Components/EstadoBadge";
 import { Menu } from "primereact/menu";
-import { Badge } from "primereact/badge";
 import DataTable from "../../../Components/DataTable";
-import { Dialog } from "primereact/dialog";
-import { RadioButton } from "primereact/radiobutton";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
-import { Card } from "primereact/card";
 
 const TestimoniosScreen = () => {
   const menuRef = useRef<Menu[]>([]);
@@ -184,9 +184,9 @@ const TestimoniosScreen = () => {
       header: "Estado",
       field: "NombreEstado",
       body: (rowData: any) => (
-        <Badge
-          value={rowData.NombreEstado}
-          style={{ backgroundColor: rowData.ColorFondo, color: "black", cursor: "pointer", }}
+        <EstadoBadge
+          nombre={rowData.NombreEstado}
+          color={rowData.ColorFondo}
           onClick={() => abrirDialogEstados(rowData)}
         />
       ),
@@ -200,8 +200,9 @@ const TestimoniosScreen = () => {
           <div className="flex justify-end items-center">
             <Button
               icon="pi pi-ellipsis-v"
-              className="p-button-text p-button-sm"
-              style={{ color: "gray" }}
+              rounded
+              text
+              aria-label="Acciones"
               onClick={(e) => menuRef.current[rowIndex]?.toggle(e)}
             />
             <Menu
@@ -218,143 +219,98 @@ const TestimoniosScreen = () => {
   ];
 
   // Render del diálogo para selección de estados
-  const renderDialog = () => (
-    <Dialog
-      header={`Cambiar Estado Testimonio`}
-      visible={dialogVisible}
-      className="sm:w-1/3 w-full sm:p-0 p-2"
-      modal
-      onHide={cerrarDialog}
-      footer={
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={cerrarDialog}
-            className="text-gray-700 hover:text-gray-800"
-          >
-            Cancelar
-          </button>
-
-          <button
-            onClick={guardarEstado}
-            className="text-pink-600 hover:text-pink-600"
-          >
-            Guardar
-          </button>
-        </div>
-      }
-    >
-      <div className="flex flex-col gap-3">
-        {estados.map((estado) => (
-          <div key={estado.value} className="flex align-items-center">
-            <RadioButton
-              inputId={`estado_${estado.value}`}
-              name="estado"
-              value={estado.value}
-              onChange={() => onEstadoChange(estado.value)}
-              checked={selectedEstado === estado.value}
-            />
-            <label htmlFor={`estado_${estado.value}`} className="ml-2">
-              {estado.label}
-            </label>
-          </div>
-        ))}
-      </div>
-    </Dialog>
-  );
-
   useEffect(() => {
     getInfo();
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <>
       <Toast ref={toast} />
       <ConfirmDialog />
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-2 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Testimonios</h1>
-          <Button
-            icon="pi pi-sync"
-            rounded
-            aria-label="Filter"
-            onClick={() => getInfo()}
-          />
+
+      <PageHeader
+        eyebrow="Agenda"
+        title="Testimonios"
+        subtitle="Aprueba las reseñas para que se muestren en el sitio web."
+        actions={
+          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={() => getInfo()}>
+            <i className="pi pi-sync" />
+          </button>
+        }
+      />
+
+      {loading ? (
+        <div className="card-soft">
+          <Loading loading={loading} />
         </div>
+      ) : data.length === 0 ? (
+        <div className="card-soft">
+          <EmptyState icon="pi pi-star" title="Sin testimonios" text="Aún no hay reseñas enviadas desde el sitio." />
+        </div>
+      ) : (
+        <>
+          {/* Tabla solo visible en pantallas grandes */}
+          <div className="card-soft hidden overflow-hidden sm:block">
+            <DataTable columns={columns} data={data} striped hover rows={10} />
+          </div>
 
-        <div className="sm:bg-white sm:rounded sm:shadow sm:p-4 h-[52rem] overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-screen">
-              <Loading loading={loading} />
-            </div>
-          ) : (
-            <>
-              {/* Tabla solo visible en pantallas grandes */}
-              <div className="hidden sm:block">
-                <DataTable
-                  columns={columns}
-                  data={data}
-                  striped
-                  hover
-                  rows={5}
-                />
-              </div>
-
-              {/* Tarjetas para pantallas pequeñas */}
-              <div className="sm:hidden">
-                <div className="flex flex-col gap-4 h-[85vh] overflow-y-auto">
-                  {data.map((info, index) => (
-                    <div key={info.id} className="relative">
-                      <div className="absolute top-2 right-2 flex items-center gap-2">
-                        <Badge
-                          value={info.NombreEstado}
-                          className="text-white text-xs"
-                          style={{ backgroundColor: info.ColorFondo, color:'black' }}
-                          onClick={() => abrirDialogEstados(info)}
-                        />
-                        <Button
-                          icon="pi pi-ellipsis-v"
-                          className="p-button-text p-button-sm"
-                          style={{ color: "gray" }}
-                          onClick={(e) => menuRef.current[index]?.toggle(e)}
-                        />
-                        <Menu
-                          model={getActionItems(info)}
-                          popup
-                          ref={(el) => {
-                            menuRef.current[index] = el!;
-                          }}
-                        />
-                      </div>
-                      <Card>
-                        <div className="text-sm text-gray-700 space-y-1 mt-3">
-                          {/* <p>
-                            <span className="font-semibold">ID:</span> {info.id}
-                          </p> */}
-                          <p>
-                            <span className="font-semibold">Nombre:</span>{" "}
-                            {info.nombre}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Celular:</span>{" "}
-                            {info.Celular}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Mensaje:</span>{" "}
-                            {info.contenido}
-                          </p>
-                        </div>
-                      </Card>
-                    </div>
-                  ))}
+          {/* Tarjetas para pantallas pequeñas */}
+          <div className="flex flex-col gap-3 sm:hidden">
+            {data.map((info, index) => (
+              <article key={info.id} className="card-soft p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="min-w-0 truncate pt-1 font-medium text-ink-900">{info.nombre}</h3>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <EstadoBadge
+                      nombre={info.NombreEstado}
+                      color={info.ColorFondo}
+                      onClick={() => abrirDialogEstados(info)}
+                    />
+                    <Button
+                      icon="pi pi-ellipsis-v"
+                      rounded
+                      text
+                      aria-label="Acciones"
+                      onClick={(e) => menuRef.current[index]?.toggle(e)}
+                    />
+                    <Menu
+                      model={getActionItems(info)}
+                      popup
+                      ref={(el) => {
+                        menuRef.current[index] = el!;
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </div>
+                <dl className="mt-3 space-y-3">
+                  {info.Celular && (
+                    <div>
+                      <dt className="dato-label">Celular</dt>
+                      <dd className="dato-valor break-words">{info.Celular}</dd>
+                    </div>
+                  )}
+                  {info.contenido && (
+                    <div>
+                      <dt className="dato-label">Reseña</dt>
+                      <dd className="dato-valor break-words">{info.contenido}</dd>
+                    </div>
+                  )}
+                </dl>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
 
-        {renderDialog()}
-      </main>
-    </div>
+      <DialogCambiarEstado
+        dialogEstadoVisible={dialogVisible}
+        cerrarDialog={cerrarDialog}
+        guardarEstado={guardarEstado}
+        estados={estados}
+        onEstadoChange={onEstadoChange}
+        selectedEstado={selectedEstado}
+      />
+    </>
   );
 };
 

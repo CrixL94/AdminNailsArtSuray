@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Toast } from "primereact/toast";
 import Loading from "../../../Components/Loader";
-import { Button } from "primereact/button";
+import PageHeader from "../../../Components/PageHeader";
+import EmptyState from "../../../Components/EmptyState";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { supabase } from "../../../supabaseClient";
 import UploadDialog, { MAX_FOTOS_GALERIA } from "./UploadDialog";
@@ -71,8 +72,11 @@ const GaleriaScreen = () => {
 
   const confirmarEliminarImagen = (info: any) => {
     confirmDialog({
-      message: `¿Estás seguro que deseas eliminar "${info.nombre}"?`,
-      header: "Confirmación",
+      message: "¿Eliminar esta foto de la galería? Dejará de verse en el sitio.",
+      header: "Eliminar foto",
+      acceptLabel: "Eliminar",
+      rejectLabel: "Cancelar",
+      acceptClassName: "p-button-danger",
       icon: "pi pi-exclamation-triangle",
       accept: () => eliminarImagen(info),
     });
@@ -83,67 +87,72 @@ const GaleriaScreen = () => {
   }, []);
 
   return (
-    <div>
+    <>
       <Toast ref={toast} />
       <ConfirmDialog />
 
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-2 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Galería</h1>
-          {!loading && (
-            <span className="text-sm text-gray-500">
-              {filesData.length} / {MAX_FOTOS_GALERIA} fotos
-            </span>
-          )}
-          <Button
-            icon="pi pi-sync"
-            rounded
-            aria-label="Refrescar"
-            onClick={fetchInicioData}
-          />
+      <PageHeader
+        eyebrow="Sitio web"
+        title="Galería"
+        subtitle={
+          loading
+            ? "Las fotos de tus trabajos que se muestran en el sitio."
+            : `${filesData.length} de ${MAX_FOTOS_GALERIA} fotos · al pasar el límite se borran las más antiguas.`
+        }
+        actions={
+          <>
+          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={fetchInicioData}>
+            <i className="pi pi-sync" />
+          </button>
+          <button type="button" className="btn-primary" onClick={() => setUploadDialogVisible(true)}>
+            <i className="pi pi-upload" />
+            Subir fotos
+          </button>
+          </>
+        }
+      />
 
-          <Button
-            icon="pi pi-upload"
-            rounded
-            severity="success"
-            onClick={() => setUploadDialogVisible(true)}
+      {loading ? (
+        <div className="card-soft">
+          <Loading loading={loading} />
+        </div>
+      ) : filesData.length === 0 ? (
+        <div className="card-soft">
+          <EmptyState
+            icon="pi pi-images"
+            title="La galería está vacía"
+            text="Sube fotos de tus trabajos para mostrarlas en el sitio."
+            action={<button type="button" className="btn-primary" onClick={() => setUploadDialogVisible(true)}><i className="pi pi-upload" />Subir fotos</button>}
           />
         </div>
-        <div className="sm:bg-white sm:rounded sm:shadow h-screen sm:h-[52rem] sm:p-6 p-0 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <Loading loading={loading} />
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-6">
-              {filesData.map((img, index) => (
-                <div
-                  key={index}
-                  className="sm:bg-gray-100 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-300"
+      ) : (
+        <div className="columns-2 gap-4 sm:columns-3 lg:columns-4">
+          {filesData.map((img, index) => (
+            <figure
+              key={img.nombre ?? index}
+              className="group relative mb-4 break-inside-avoid overflow-hidden rounded-2xl bg-brand-100 shadow-soft"
+            >
+              <img
+                src={img.url}
+                alt={img.nombre}
+                loading="lazy"
+                className="w-full object-cover"
+              />
+              <figcaption className="absolute inset-x-0 bottom-0 flex items-center justify-end bg-gradient-to-t from-ink-900/60 to-transparent p-2 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+                <button
+                  type="button"
+                  aria-label="Eliminar foto"
+                  title="Eliminar foto"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/95 text-red-600 shadow-soft transition hover:bg-red-600 hover:text-white"
+                  onClick={() => confirmarEliminarImagen(img)}
                 >
-                  <div className="flex items-center justify-between p-1">
-                    <h2 className="text-lg font-bold text-purple-600 truncate">
-                      {img.nombre}
-                    </h2>
-                    <Button
-                      icon="pi pi-trash"
-                      className="p-button-text p-button-sm"
-                      style={{ color: "gray" }}
-                      onClick={() => confirmarEliminarImagen(img)}
-                    />
-                  </div>
-                  <img
-                    src={img.url}
-                    alt={img.nombre}
-                    loading="lazy"
-                    className="w-full h-auto object-cover rounded-t-lg"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+                  <i className="pi pi-trash text-sm" />
+                </button>
+              </figcaption>
+            </figure>
+          ))}
         </div>
-      </main>
+      )}
 
       <UploadDialog
         visible={uploadDialogVisible}
@@ -151,7 +160,7 @@ const GaleriaScreen = () => {
         onUploaded={fetchInicioData}
         filesData={filesData}
       />
-    </div>
+    </>
   );
 };
 

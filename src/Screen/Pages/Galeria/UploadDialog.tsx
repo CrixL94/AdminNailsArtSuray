@@ -169,26 +169,30 @@ const UploadDialog = ({ visible, onHide, onUploaded, filesData }: Props) => {
     <>
       <Toast ref={toast} />
       <Dialog
-        header="Subir imágenes"
+        header="Subir fotos"
         visible={visible}
         onHide={() => {
           setSelectedFiles([]);
           onHide();
         }}
-        className="sm:w-1/2 w-full sm:p-0 p-2"
+        className="w-[94vw] max-w-2xl"
+        blockScroll
+        draggable={false}
         modal
         footer={
           <div className="flex justify-end gap-2">
             <button
               onClick={cerrarDialog}
-              className="text-gray-700 hover:text-gray-800"
+              type="button"
+              className="btn-ghost"
               disabled={uploading}
             >
               Cancelar
             </button>
             <button
               onClick={handleUpload}
-              className="text-pink-600 hover:text-pink-600"
+              type="button"
+              className="btn-primary"
               disabled={selectedFiles.length === 0 || uploading}
             >
               {uploading ? "Subiendo..." : "Agregar y subir"}
@@ -199,12 +203,12 @@ const UploadDialog = ({ visible, onHide, onUploaded, filesData }: Props) => {
         {uploading ? (
           <div className="flex flex-col items-center justify-center gap-4 h-full py-6">
             <Loading loading={uploading} />
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-ink-500">
               Subiendo {Math.min(progreso.hechas + 1, progreso.total)} de {progreso.total}…
             </p>
-            <div className="w-full max-w-sm h-2 rounded-full bg-gray-200 overflow-hidden">
+            <div className="h-2 w-full max-w-sm overflow-hidden rounded-full bg-brand-100">
               <div
-                className="h-full bg-pink-600 transition-all duration-300"
+                className="h-full bg-brand-600 transition-all duration-300"
                 style={{ width: `${progreso.total ? (progreso.hechas / progreso.total) * 100 : 0}%` }}
               />
             </div>
@@ -222,14 +226,14 @@ const UploadDialog = ({ visible, onHide, onUploaded, filesData }: Props) => {
             />
 
             {selectedFiles.length > 0 && (
-              <p className="mb-2 text-sm text-gray-600">
+              <p className="mb-2 text-sm text-ink-500">
                 {selectedFiles.length} de {MAX_FOTOS_GALERIA} foto(s) seleccionada(s) · haz clic en el recuadro para agregar más
               </p>
             )}
 
             {/* vista previa o selector */}
             <div
-              className={`mt-2 rounded shadow-md w-full min-h-48 max-h-[60vh] overflow-y-auto bg-gray-100 p-4 cursor-pointer hover:opacity-90 transition-opacity duration-200 ${
+              className={`mt-2 min-h-48 max-h-[60vh] w-full cursor-pointer overflow-y-auto rounded-2xl border-2 border-dashed border-brand-200 bg-white p-4 transition hover:border-brand-400 ${
                 selectedFiles.length > 0
                   ? "grid grid-cols-3 sm:grid-cols-5 gap-3 content-start"
                   : "flex justify-center items-center"
@@ -242,7 +246,7 @@ const UploadDialog = ({ visible, onHide, onUploaded, filesData }: Props) => {
                     <img
                       src={previews[idx]}
                       alt={file.name}
-                      className="w-full aspect-square object-cover rounded shadow"
+                      className="aspect-square w-full rounded-xl object-cover"
                     />
                     {/* Botón para eliminar imagen */}
                     <button
@@ -253,14 +257,14 @@ const UploadDialog = ({ visible, onHide, onUploaded, filesData }: Props) => {
                         updatedFiles.splice(idx, 1);
                         setSelectedFiles(updatedFiles);
                       }}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      className="absolute top-1 right-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-white/95 text-xs text-red-600 shadow-soft hover:bg-red-600 hover:text-white"
                     >
                       ✕
                     </button>
                   </div>
                 ))
               ) : (
-                <div className="flex flex-col items-center justify-center text-gray-500">
+                <div className="flex flex-col items-center justify-center text-brand-400">
                   <i className="pi pi-image text-4xl mb-2"></i>
                   <p className="text-sm">Haz clic para seleccionar imágenes</p>
                 </div>

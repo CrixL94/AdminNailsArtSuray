@@ -235,9 +235,11 @@ const DetallesServiciosCRUD = ({
     <div>
       <Toast ref={toast} />
       <Dialog
-        header={editando ? "Editar Detalle" : "Nuevo Detalle"}
+        header={editando ? "Editar detalle" : "Nuevo detalle"}
         visible={visible}
-        className="sm:w-1/2 w-full sm:p-0 p-2"
+        className="w-[94vw] max-w-2xl"
+        blockScroll
+        draggable={false}
         modal
         onHide={() => {
           cerrarDialog();
@@ -246,13 +248,15 @@ const DetallesServiciosCRUD = ({
           <div className="flex justify-end gap-2">
             <button
               onClick={cerrarDialog}
-              className="text-gray-700 hover:text-gray-800"
+              type="button"
+              className="btn-ghost"
             >
               Cancelar
             </button>
             <button
               onClick={guardarRegistro}
-              className="text-pink-600 hover:text-pink-600"
+              type="button"
+              className="btn-primary"
             >
               {editando ? "Actualizar" : "Guardar"}
             </button>
@@ -261,7 +265,7 @@ const DetallesServiciosCRUD = ({
       >
         <div className="relative">
           {loading && (
-            <div className="absolute inset-0 z-50 bg-white bg-opacity-75 flex items-center justify-center">
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl bg-cream/80 backdrop-blur-sm">
               <div className="text-center">
                 <Loading loading={loading} />
               </div>
@@ -271,7 +275,7 @@ const DetallesServiciosCRUD = ({
           <form className="sm:flex sm:flex-wrap flex-col w-full gap-4 mt-4">
             <div className="sm:flex gap-3 mb-4">
               <div className="sm:w-1/2 w-full">
-                <label htmlFor="id_servicio" className="font-bold block mb-2">
+                <label htmlFor="id_servicio" className="field-label">
                   Servicio
                 </label>
                 <Dropdown
@@ -286,13 +290,13 @@ const DetallesServiciosCRUD = ({
                   className="w-full"
                 />
                 {error.id_servicio && (
-                  <small className="p-error">Campo es requerido</small>
+                  <small className="field-error">Campo es requerido</small>
                 )}
               </div>
 
               <div className="sm:w-1/2 w-full sm:mt-0 mt-4">
-                <label htmlFor="nombre" className="font-bold block mb-2">
-                  Detalle Servicio
+                <label htmlFor="nombre" className="field-label">
+                  Nombre del detalle
                 </label>
                 <InputText
                   id="nombre"
@@ -302,15 +306,15 @@ const DetallesServiciosCRUD = ({
                   className="w-full"
                 />
                 {error.nombre && (
-                  <small className="p-error">Detalle es requerido</small>
+                  <small className="field-error">Detalle es requerido</small>
                 )}
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3 mb-4">
               <div className="flex-auto">
-                <label htmlFor="precio" className="font-bold block mb-2">
-                  Costo Lps.
+                <label htmlFor="precio" className="field-label">
+                  Precio (L.)
                 </label>
                 <InputText
                   id="precio"
@@ -321,13 +325,13 @@ const DetallesServiciosCRUD = ({
                   className="w-full"
                 />
                 {error.precio && (
-                  <small className="p-error">Costo es requerido</small>
+                  <small className="field-error">Costo es requerido</small>
                 )}
               </div>
               <div className="flex-auto">
                 <label
                   htmlFor="duracion_minutos"
-                  className="font-bold block mb-2"
+                  className="field-label"
                 >
                   Tiempo Estimado (Minutos)
                 </label>
@@ -340,14 +344,14 @@ const DetallesServiciosCRUD = ({
                   className="w-full"
                 />
                 {error.duracion_minutos && (
-                  <small className="p-error">Tiempo es requerido</small>
+                  <small className="field-error">Tiempo es requerido</small>
                 )}
               </div>
             </div>
 
             <div className="sm:flex gap-3 mb-4">
               <div className="sm:w-1/2 w-full">
-                <label htmlFor="descripcion" className="font-bold block mb-2">
+                <label htmlFor="descripcion" className="field-label">
                   Descripción
                 </label>
                 <InputTextarea
@@ -358,12 +362,12 @@ const DetallesServiciosCRUD = ({
                   className="w-full"
                 />
                 {error.descripcion && (
-                  <small className="p-error">Campo es requerido</small>
+                  <small className="field-error">Campo es requerido</small>
                 )}
               </div>
 
               <div className="sm:w-1/2 sm:mt-0 mt-4 w-full">
-                <label htmlFor="id_estado" className="font-bold block mb-2">
+                <label htmlFor="id_estado" className="field-label">
                   Estado
                 </label>
                 <Dropdown

@@ -2,12 +2,12 @@ import { useRef, useState } from "react";
 import { InputText } from "primereact/inputtext";
 import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
-import { Button } from "primereact/button";
 import { supabase } from "../supabaseClient";
 import { useForm } from "../Hooks/useForm";
 import { toastShow } from "../Services/ToastService";
 import { Toast } from "primereact/toast";
 import { useNavigate } from "react-router-dom";
+import Logo from "../Components/Logo";
 
 const Login = () => {
   const toast = useRef<Toast>(null!);
@@ -76,79 +76,119 @@ const Login = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="grid min-h-screen bg-cream lg:grid-cols-[1.1fr_1fr]">
       <Toast ref={toast} />
-      <form
-        onSubmit={handleSubmit}
-        className="sm:bg-white p-8 rounded-b-md sm:shadow-md w-full max-w-md"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
 
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block mb-1 font-semibold">
-              Correo electrónico
-            </label>
-            <InputText
-              id="email"
-              name="email"
-              type="email"
-              value={values?.email}
-              onChange={handleInputChange}
-              placeholder="Correo electrónico"
-              className={`w-full ${
-                error?.email ? "border-red-500 border-2" : ""
-              }`}
-              keyfilter="email"
-            />
-            {error.email && (
-              <small className="text-red-500 text-sm">
-                Correo es obligatorio.
-              </small>
-            )}
-          </div>
+      {/* Panel de marca */}
+      <aside className="relative hidden overflow-hidden bg-ink-900 p-14 text-white lg:flex lg:flex-col lg:justify-between">
+        <div className="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-brand-600/35 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 -bottom-32 h-96 w-96 rounded-full bg-brand-400/20 blur-3xl" />
 
-          <div>
-            <label htmlFor="password" className="block mb-1 font-semibold">
-              Contraseña
-            </label>
-            <IconField>
-              <InputIcon
-                className={`cursor-pointer ${
-                  showPassword ? "pi pi-eye-slash" : "pi pi-eye"
-                }`}
-                onClick={() => setShowPassword(!showPassword)}
-              />
-              <InputText
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={values?.password}
-                onChange={handleInputChange}
-                placeholder="Contraseña"
-                className={`w-full ${
-                  error?.password ? "border-red-500 border-2" : ""
-                }`}
-              />
-            </IconField>
-            {error.password && (
-              <small className="text-red-500 text-sm">
-                Contraseña es obligatorio.
-              </small>
-            )}
-          </div>
-
-          {errorMsg && <div className="text-red-500 text-sm">{errorMsg}</div>}
-
-          <Button
-            unstyled
-            label={loading ? "Iniciando..." : "Iniciar Sesión"}
-            type="submit"
-            className="w-full mt-2 bg-pink-600 text-white hover:bg-pink-700 p-2 rounded-sm"
-            disabled={loading}
-          />
+        <div className="relative inline-flex w-fit rounded-2xl bg-cream px-5 py-4">
+          <Logo className="w-24" />
         </div>
-      </form>
+
+        <div className="relative max-w-md">
+          <p className="eyebrow mb-5 text-brand-300 before:bg-brand-300">Panel de administración</p>
+          <h1 className="font-display text-5xl leading-tight font-medium">
+            Todo tu estudio, en un solo lugar.
+          </h1>
+          <p className="mt-5 text-white/70">
+            Gestiona citas, mensajes, testimonios y el contenido de tu sitio web.
+          </p>
+        </div>
+
+        <p className="relative text-xs text-white/40">
+          © {new Date().getFullYear()} Nail's Art Suray
+        </p>
+      </aside>
+
+      {/* Formulario */}
+      <main className="flex items-center justify-center px-5 py-12">
+        <form onSubmit={handleSubmit} className="w-full max-w-sm" noValidate>
+          <div className="mb-10 flex justify-center lg:hidden">
+            <Logo className="w-28" />
+          </div>
+
+          <p className="eyebrow mb-3">Bienvenida</p>
+          <h2 className="heading-xl">Iniciar sesión</h2>
+          <p className="mt-2 text-sm text-ink-500">
+            Ingresa con tu correo y contraseña.
+          </p>
+
+          <div className="mt-8 space-y-5">
+            <div>
+              <label htmlFor="email" className="field-label">
+                Correo electrónico
+              </label>
+              <InputText
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={values?.email}
+                onChange={handleInputChange}
+                placeholder="tucorreo@ejemplo.com"
+                className="w-full"
+                invalid={!!error?.email}
+                keyfilter="email"
+              />
+              {error.email && (
+                <small className="field-error">El correo es obligatorio.</small>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="password" className="field-label">
+                Contraseña
+              </label>
+              <IconField iconPosition="right">
+                <InputIcon
+                  className={`cursor-pointer ${
+                    showPassword ? "pi pi-eye-slash" : "pi pi-eye"
+                  }`}
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                />
+                <InputText
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={values?.password}
+                  onChange={handleInputChange}
+                  placeholder="••••••••"
+                  className="w-full"
+                  invalid={!!error?.password}
+                />
+              </IconField>
+              {error.password && (
+                <small className="field-error">La contraseña es obligatoria.</small>
+              )}
+            </div>
+
+            {errorMsg && <div className="text-sm text-red-600">{errorMsg}</div>}
+
+            <button
+              type="submit"
+              className="btn-primary w-full py-3 text-base"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <i className="pi pi-spin pi-spinner" />
+                  Iniciando…
+                </>
+              ) : (
+                <>
+                  Entrar
+                  <i className="pi pi-arrow-right text-xs" />
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </main>
     </div>
   );
 };

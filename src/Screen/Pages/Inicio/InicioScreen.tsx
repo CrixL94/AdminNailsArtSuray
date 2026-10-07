@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../supabaseClient";
 import { Toast } from "primereact/toast";
-import { Button } from "primereact/button";
 import Loading from "../../../Components/Loader";
-import { Badge } from "primereact/badge";
-import { Menu } from "primereact/menu";
+import PageHeader from "../../../Components/PageHeader";
+import EmptyState from "../../../Components/EmptyState";
+import EstadoBadge from "../../../Components/EstadoBadge";
 import { listarUrlsPublicas } from "../../../Services/Funciones";
 import InicioCRUD from "./InicioCRUD";
 
 const InicioScreen = () => {
   const toast = useRef<Toast>(null!);
-  const menuRef = useRef<Menu[]>([]);
 
   const [inicioData, setInicioData] = useState<any>([]);
   const [filesData, setFilesData] = useState<any>([]);
@@ -62,16 +61,6 @@ const InicioScreen = () => {
     setDialogVisible(true);
   };
 
-  const getActionItems = (info: any) => {
-    const items = [
-      {
-        label: "Editar",
-        icon: "pi pi-pencil",
-        command: () => abrirDialog(info),
-      },
-    ];
-    return items;
-  };
 
   useEffect(() => {
     fetchInicioData();
@@ -82,91 +71,79 @@ const InicioScreen = () => {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <>
       <Toast ref={toast} />
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-2 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Página de Inicio</h1>
-          <Button
-            icon="pi pi-sync"
-            rounded
-            aria-label="Filter"
-            onClick={() => fetchInicioData()}
-          />
+
+      <PageHeader
+        eyebrow="Sitio web"
+        title="Inicio"
+        subtitle="La portada de tu sitio web: lo primero que ven tus clientas."
+        actions={
+          <>
+          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={() => fetchInicioData()}>
+            <i className="pi pi-sync" />
+          </button>
+          </>
+        }
+      />
+
+      {loading ? (
+        <div className="card-soft">
+          <Loading loading={loading} />
         </div>
-        <div className="bg-white rounded shadow sm:h-[52rem]">
-          {loading || !imagenFondo ? (
-            <div className="flex items-center justify-center h-screen">
-              <Loading loading={loading} />
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-wrap gap-4 sm:h-[49rem] h-[35rem] overflow-y-auto sm:overflow-y-visible sm:mb-0">
-                {inicioData.map((inicio: any, index: any) => (
-                  <div key={inicio.id} className="relative w-full">
-                    <div className="absolute top-2 right-2 flex items-center gap-2">
-                      <Badge
-                        value={inicio.NombreEstado}
-                        className="text-white text-xs"
-                        style={{ backgroundColor: inicio.ColorFondo || "#999" }}
-                      />
-                      <Button
-                        icon="pi pi-ellipsis-v"
-                        className="p-button-text p-button-sm"
-                        style={{ color: "gray" }}
-                        onClick={(e) => menuRef.current[index]?.toggle(e)}
-                      />
-                      <Menu
-                        model={getActionItems(inicio)}
-                        popup
-                        ref={(el) => {
-                          menuRef.current[index] = el!;
-                        }}
-                      />
-                    </div>
-
-                    <div className="w-full h-full mt-12 relative bg-gray-100">
-                      <div className="flex flex-col md:flex-row items-center justify-center h-full sm:px-[10rem] sm:mb-0 overflow-y-auto sm:overflow-y-visible">
-                        <div className="flex-1 text-center md:text-left sm:p-8 p-4">
-                          <h1 className="text-2xl sm:text-6xl font-bold text-purple-600 sm:mb-4 sm:mt-0 mt-[7rem]">
-                            {inicio.titulo}
-                          </h1>
-
-                          <p className="sm:text-2xl text-base md:text-lg text-gray-600">
-                            <span className="font-semibold sm:text-lg text-base text-purple-500">
-                              {inicio.subtitulo}
-                            </span>
-                            <span> </span>
-                            {inicio.resumen}
-                          </p>
-
-                          <p className="sm:text-2xl text-base md:text-lg text-gray-600 mb-4">
-                            <br className="hidden sm:block" />
-                            <span className="font-semibold">
-                              {inicio.label_atencion}
-                            </span>
-                          </p>
-
-                          <button className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-6 rounded-full transition duration-300">
-                            {inicio.label_boton}
-                          </button>
-                        </div>
-                        <div className="flex-1">
-                          <img
-                            src={`${imagenFondo?.url}`}
-                            alt="Manicura y Pedicura"
-                            className="w-full h-full object-cover sm:rounded-xl shadow-lg"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+      ) : inicioData.length === 0 ? (
+        <div className="card-soft">
+          <EmptyState icon="pi pi-file-edit" title="Sin contenido" text="Aún no hay información para esta sección." />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {inicioData.map((inicio: any) => (
+            <article key={inicio.id} className="card-soft overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 px-5 py-3 sm:px-6">
+                <span className="flex items-center gap-2 text-xs tracking-[0.2em] text-ink-400 uppercase">
+                  <i className="pi pi-eye" />
+                  Vista previa
+                </span>
+                <div className="flex items-center gap-2">
+                  {inicio.NombreEstado && (
+                    <EstadoBadge nombre={inicio.NombreEstado} color={inicio.ColorFondo} />
+                  )}
+                  <button type="button" className="btn-primary px-4 py-2" onClick={() => abrirDialog(inicio)}>
+                    <i className="pi pi-pencil" />
+                    Editar
+                  </button>
+                </div>
               </div>
-            </>
-          )}
+              <div className="grid items-center gap-10 bg-cream p-6 sm:p-10 md:grid-cols-[1.2fr_1fr]">
+                <div className="text-center md:text-left">
+                  <p className="eyebrow mb-4">Nail studio</p>
+                  <h2 className="heading-xl">{inicio.titulo}</h2>
+                  <p className="mt-4 leading-relaxed text-ink-500">
+                    <span className="font-display text-xl text-brand-600 italic">{inicio.subtitulo}</span>{" "}
+                    {inicio.resumen}
+                  </p>
+                  {inicio.label_atencion && (
+                    <p className="mt-4 text-sm font-medium text-ink-700">{inicio.label_atencion}</p>
+                  )}
+                  {inicio.label_boton && (
+                    <span className="btn-primary pointer-events-none mt-6">
+                      <i className="pi pi-calendar" />
+                      {inicio.label_boton}
+                    </span>
+                  )}
+                </div>
+                <div className="relative mx-auto w-full max-w-xs">
+                  <div className="aspect-[4/5] overflow-hidden rounded-t-[999px] rounded-b-[2rem] bg-brand-100 shadow-lift">
+                    {imagenFondo && (
+                      <img src={imagenFondo.url} alt={inicio.titulo} className="h-full w-full object-cover" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
         </div>
-      </main>
+      )}
 
       <InicioCRUD
         visible={dialogVisible}
@@ -175,7 +152,7 @@ const InicioScreen = () => {
         filesData={filesData}
         getInfo={fetchInicioData}
       />
-    </div>
+    </>
   );
 };
 

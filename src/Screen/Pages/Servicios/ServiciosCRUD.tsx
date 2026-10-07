@@ -245,9 +245,11 @@ const ServiciosCRUD = ({
     <div>
       <Toast ref={toast} />
       <Dialog
-        header={editando ? "Editar Servicio" : "Nuevo Servicio"}
+        header={editando ? "Editar servicio" : "Nuevo servicio"}
         visible={visible}
-        className="sm:w-1/2 w-full sm:p-0 p-2"
+        className="w-[94vw] max-w-2xl"
+        blockScroll
+        draggable={false}
         modal
         onHide={() => {
           cerrarDialog();
@@ -256,13 +258,15 @@ const ServiciosCRUD = ({
           <div className="flex justify-end gap-2">
             <button
               onClick={cerrarDialog}
-              className="text-gray-700 hover:text-gray-800"
+              type="button"
+              className="btn-ghost"
             >
               Cancelar
             </button>
             <button
               onClick={guardarRegistro}
-              className="text-pink-600 hover:text-pink-600"
+              type="button"
+              className="btn-primary"
             >
               {editando ? "Actualizar" : "Guardar"}
             </button>
@@ -271,7 +275,7 @@ const ServiciosCRUD = ({
       >
         <div className="relative">
           {loading && (
-            <div className="absolute inset-0 z-50 bg-white bg-opacity-75 flex items-center justify-center">
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl bg-cream/80 backdrop-blur-sm">
               <div className="text-center">
                 <Loading loading={loading} />
               </div>
@@ -281,8 +285,8 @@ const ServiciosCRUD = ({
           <form className="sm:flex sm:flex-wrap flex-col w-full gap-4 mt-4">
             <div className="sm:flex gap-3 mb-4">
               <div className="sm:w-1/2 w-full">
-                <label htmlFor="nombre" className="font-bold block mb-2">
-                  Nombre Servicio
+                <label htmlFor="nombre" className="field-label">
+                  Nombre del servicio
                 </label>
                 <InputText
                   id="nombre"
@@ -292,12 +296,12 @@ const ServiciosCRUD = ({
                   className="w-full"
                 />
                 {error.nombre && (
-                  <small className="p-error">Titulo es requerido</small>
+                  <small className="field-error">Titulo es requerido</small>
                 )}
               </div>
 
               <div className="sm:w-1/2 sm:mt-0 mt-4 w-full">
-                <label htmlFor="id_estado" className="font-bold block mb-2">
+                <label htmlFor="id_estado" className="field-label">
                   Estado
                 </label>
                 <Dropdown
@@ -316,7 +320,7 @@ const ServiciosCRUD = ({
 
             <div className="flex flex-wrap gap-3 mb-4">
               <div className="flex-auto">
-                <label htmlFor="nombre" className="font-bold block mb-2">
+                <label htmlFor="nombre" className="field-label">
                   Descripción
                 </label>
                 <InputTextarea
@@ -329,7 +333,7 @@ const ServiciosCRUD = ({
                   cols={30}
                 />
                 {error.descripcion && (
-                  <small className="p-error">Descripcion es requerido</small>
+                  <small className="field-error">Descripcion es requerido</small>
                 )}
               </div>
             </div>
@@ -337,10 +341,10 @@ const ServiciosCRUD = ({
             <div className="sm:w-1/2 w-full">
               <label
                 htmlFor="img_url_fondo"
-                className="font-bold block mb-2 cursor-pointer"
+                className="field-label cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
-                Imagen (haz clic en la imagen para cambiar)
+                Imagen · haz clic para cambiarla
               </label>
 
               {/* input oculto */}
@@ -367,14 +371,15 @@ const ServiciosCRUD = ({
                         )?.url
                   }
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-2 rounded shadow-md w-full object-cover cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                  className="mt-2 max-h-72 w-full cursor-pointer rounded-2xl object-cover ring-1 ring-brand-100 transition hover:opacity-90"
                 />
               ) : (
                 <div
-                  className="mt-2 rounded shadow-md w-full h-48 bg-gray-200 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                  className="mt-2 flex h-48 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-brand-200 bg-white text-brand-400 transition hover:border-brand-400 hover:bg-brand-50"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <i className="pi pi-image text-4xl text-gray-500"></i>
+                  <i className="pi pi-image text-3xl"></i>
+                  <span className="text-sm">Haz clic para elegir una imagen</span>
                 </div>
               )}
             </div>

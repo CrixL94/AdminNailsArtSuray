@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import Loading from "../../../Components/Loader";
+import PageHeader from "../../../Components/PageHeader";
+import EmptyState from "../../../Components/EmptyState";
 import { supabase } from "../../../supabaseClient";
 
 import FullCalendar from "@fullcalendar/react";
@@ -14,8 +15,6 @@ import {
   formatearHoraAMPM,
   sumarUnaHora,
 } from "../../../Services/Funciones";
-import { Badge } from "primereact/badge";
-import { Card } from "primereact/card";
 import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog";
 import { Toast } from "primereact/toast";
 import { toastShow } from "../../../Services/ToastService";
@@ -109,47 +108,24 @@ const CitasScreen = () => {
       title: cita.nombrecompleto,
       start: `${cita.dia}T${cita.hora}`,
       end: `${cita.dia}T${sumarUnaHora(cita.hora)}`,
-      backgroundColor: "#8B5CF6",
-      borderColor: "#6B46C1",
-      textColor: "#ffffff",
       extendedProps: { ...cita },
     }));
   };
 
   //card en calendario
   const renderizarEventoPersonalizado = (arg: any) => {
-    const { nombrecompleto, servicio, hora, Estado, idcita } =
+    const { nombrecompleto, servicio, hora, Estado, idcita, idestado } =
       arg.event.extendedProps;
+    const pendiente = idestado === 3;
 
     const container = document.createElement("div");
-    container.style.backgroundColor = "#8B5CF6";
-    container.style.color = "white";
-    container.style.padding = "6px 10px";
-    container.style.borderRadius = "8px";
-    container.style.boxShadow = "0 2px 5px rgba(0,0,0,0.1)";
-    container.style.fontSize = "0.85rem";
-    container.style.width = "100%";
-    container.style.display = "block"; // Asegura que ocupe todo el espacio disponible
-    container.style.boxSizing = "border-box"; // Evita desbordamiento
-
+    container.className = `cita-evento ${pendiente ? "cita-pendiente" : ""}`;
     container.innerHTML = `
-    <strong>${nombrecompleto}</strong><br />
-    <span style="font-size: 0.75rem;">${servicio}</span><br />
-    <span style="font-size: 0.75rem;">${formatearHoraAMPM(hora)}</span><br />
-    <span style="font-size: 0.75rem;">${Estado}</span><br />
-    <button class="btn-eliminar-cita" style="
-      margin-top: 4px;
-      background: #EF4444;
-      color: white;
-      border: none;
-      padding: 2px 6px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.7rem;
-      width: 100%;
-      margin-top: 6px;
-    ">Eliminar</button>
-  `;
+      <strong>${nombrecompleto}</strong>
+      <span>${servicio}</span>
+      <span>${formatearHoraAMPM(hora)} · ${Estado}</span>
+      <button type="button" class="btn-eliminar-cita">Eliminar</button>
+    `;
 
     setTimeout(() => {
       const boton = container.querySelector(".btn-eliminar-cita");
@@ -174,185 +150,168 @@ const CitasScreen = () => {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <>
       <Toast ref={toast} />
       <ConfirmDialog />
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">
-            Calendario de Citas
-          </h1>
-          <Button
-            icon="pi pi-sync"
-            rounded
-            aria-label="Actualizar"
-            onClick={getInfo}
-          />
+
+      <PageHeader
+        eyebrow="Agenda"
+        title="Citas"
+        subtitle="Reservas hechas desde el sitio web."
+        actions={
+          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={getInfo}>
+            <i className="pi pi-sync" />
+          </button>
+        }
+      />
+
+      {loading ? (
+        <div className="card-soft">
+          <Loading loading={loading} />
         </div>
+      ) : (
+        <>
+          {/* Calendario para sm+ */}
+          <div className="card-soft hidden p-4 sm:block sm:p-6">
+            <FullCalendar
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              locales={[esLocale]}
+              locale="es"
+              headerToolbar={{
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,timeGridDay",
+              }}
+              events={formatearCitasParaCalendario(citas)}
+              height="auto"
+              nowIndicator={true}
+              eventContent={renderizarEventoPersonalizado}
+              eventClick={onEventoClick}
+            />
+          </div>
 
-        <div className="sm:bg-white sm:rounded sm:shadow sm:p-4 h-[52rem] overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-[40rem]">
-              <Loading loading={loading} />
-            </div>
-          ) : (
-            <>
-              {/* Calendario para sm+ */}
-              <div className="hidden sm:block">
-                <FullCalendar
-                  plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                  initialView="dayGridMonth"
-                  locales={[esLocale]}
-                  locale="es"
-                  headerToolbar={{
-                    left: "prev,next today",
-                    center: "title",
-                    right: "dayGridMonth,timeGridWeek,timeGridDay",
-                  }}
-                  events={formatearCitasParaCalendario(citas)}
-                  height="auto"
-                  nowIndicator={true}
-                  eventContent={renderizarEventoPersonalizado}
-                  eventClick={onEventoClick}
-                />
+          {/* Tarjetas para móviles */}
+          <div className="flex flex-col gap-3 sm:hidden">
+            {citas.length === 0 && (
+              <div className="card-soft">
+                <EmptyState icon="pi pi-calendar" title="Sin citas" text="Aún no hay reservas." />
               </div>
-
-              {/* Tarjetas para móviles */}
-              <div className="sm:hidden">
-                <div className="flex flex-col gap-4 h-[85vh] overflow-y-auto">
-                  {citas.map((info) => (
-                    <div key={info.idcita} className="relative">
-                      <div className="absolute top-2 right-2 flex items-center gap-2">
-                        <Badge
-                          value={info.Estado}
-                          className="text-white text-xs"
-                          style={{
-                            backgroundColor: info.ColorFondo || "#8B5CF6",
-                            color: "black",
-                          }}
-                        />
-                      </div>
-                      <Card>
-                        <div className="text-sm text-gray-700 space-y-1 mt-3">
-                          <p>
-                            <span className="font-semibold">Nombre:</span>{" "}
-                            {info.nombrecompleto}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Celular:</span>{" "}
-                            {info.celular}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Servicio:</span>{" "}
-                            {info.servicio}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Día:</span>{" "}
-                            {formatearDiaMesAno(info.dia)}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Hora:</span>{" "}
-                            {formatearHoraAMPM(info.hora)}
-                          </p>
-
-                          <div className="flex justify-end mt-2">
-                            <button
-                              onClick={
-                                info?.idestado === 6
-                                  ? () => eliminarCita(info.idcita)
-                                  : () => contactarWhatsApp(info)
-                              }
-                              className="text-pink-600 hover:text-pink-700"
-                            >
-                              {info?.idestado === 6
-                                ? "Eliminar"
-                                : "Contactar por WhatsApp"}
-                            </button>
-                          </div>
-
-                        </div>
-                      </Card>
-                    </div>
-                  ))}
+            )}
+            {citas.map((info) => (
+              <article key={info.idcita} className="card-soft p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-medium text-ink-900">{info.nombrecompleto}</h3>
+                    <p className="text-sm text-ink-500">{info.servicio}</p>
+                  </div>
+                  <EstadoChip estado={info.Estado} idestado={info.idestado} />
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-      </main>
+                <dl className="mt-4 grid grid-cols-2 gap-3">
+                  <div>
+                    <dt className="dato-label">Día</dt>
+                    <dd className="dato-valor">{formatearDiaMesAno(info.dia)}</dd>
+                  </div>
+                  <div>
+                    <dt className="dato-label">Hora</dt>
+                    <dd className="dato-valor">{formatearHoraAMPM(info.hora)}</dd>
+                  </div>
+                  <div className="col-span-2">
+                    <dt className="dato-label">Celular</dt>
+                    <dd className="dato-valor">{info.celular}</dd>
+                  </div>
+                </dl>
+                <div className="mt-4 flex justify-end">
+                  {info?.idestado === 6 ? (
+                    <button type="button" className="btn-ghost px-4 py-2 text-red-600" onClick={() => eliminarCita(info.idcita)}>
+                      <i className="pi pi-trash" />
+                      Eliminar
+                    </button>
+                  ) : (
+                    <button type="button" className="btn-primary px-4 py-2" onClick={() => contactarWhatsApp(info)}>
+                      <i className="pi pi-whatsapp" />
+                      Contactar por WhatsApp
+                    </button>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Dialog con detalles de la cita */}
       <Dialog
-        header="Detalle de la Cita"
+        header="Detalle de la cita"
         visible={dialogVisible}
-        style={{ width: "90vw", maxWidth: "500px" }}
+        className="w-[94vw] max-w-lg"
+        blockScroll
+        draggable={false}
         onHide={() => setDialogVisible(false)}
         footer={
           <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setDialogVisible(false)}
-              className="text-gray-700 hover:text-gray-800"
-            >
-              Cancelar
+            <button type="button" onClick={() => setDialogVisible(false)} className="btn-ghost">
+              Cerrar
             </button>
-
-            <button
-              onClick={
-                eventoSeleccionado?.idestado === 6
-                  ? () => eliminarCita(eventoSeleccionado.idcita)
-                  : () => contactarWhatsApp(eventoSeleccionado)
-              }
-              className="text-pink-600 hover:text-pink-700"
-            >
-              {eventoSeleccionado?.idestado === 6
-                ? "Eliminar"
-                : "Contactar por WhatsApp"}
-            </button>
+            {eventoSeleccionado?.idestado === 6 ? (
+              <button type="button" onClick={() => eliminarCita(eventoSeleccionado.idcita)} className="btn-danger">
+                <i className="pi pi-trash" />
+                Eliminar
+              </button>
+            ) : (
+              <button type="button" onClick={() => contactarWhatsApp(eventoSeleccionado)} className="btn-primary">
+                <i className="pi pi-whatsapp" />
+                Contactar por WhatsApp
+              </button>
+            )}
           </div>
         }
       >
         {eventoSeleccionado && (
-          <div className="space-y-2 text-sm text-gray-700">
-            <Card>
-              <div className="relative">
-                <div className="absolute top-2 right-2 flex items-center gap-2">
-                  <Badge
-                    value={eventoSeleccionado.Estado}
-                    className="text-white text-xs"
-                    style={{
-                      backgroundColor: eventoSeleccionado.ColorFondo,
-                      color: "black",
-                    }}
-                  />
-                </div>
-
-                <p>
-                  <strong>Nombre:</strong> {eventoSeleccionado.nombrecompleto}
-                </p>
-                <p>
-                  <strong>Celular:</strong> {eventoSeleccionado.celular}
-                </p>
-                <p>
-                  <strong>Día:</strong>{" "}
-                  {formatearDiaMesAno(eventoSeleccionado.dia)}
-                </p>
-                <p>
-                  <strong>Hora:</strong>{" "}
-                  {formatearHoraAMPM(eventoSeleccionado.hora)}
-                </p>
-                <p>
-                  <strong>Servicio:</strong> {eventoSeleccionado.servicio}
-                </p>
-                <p>
-                  <strong>Categoría:</strong> {eventoSeleccionado.Categoria}
-                </p>
+          <div className="card-soft p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="font-display text-2xl text-ink-900">{eventoSeleccionado.nombrecompleto}</h3>
+                <p className="text-sm text-ink-500">{eventoSeleccionado.servicio}</p>
               </div>
-            </Card>
+              <EstadoChip estado={eventoSeleccionado.Estado} idestado={eventoSeleccionado.idestado} />
+            </div>
+            <dl className="mt-5 grid grid-cols-2 gap-4">
+              <div>
+                <dt className="dato-label">Día</dt>
+                <dd className="dato-valor">{formatearDiaMesAno(eventoSeleccionado.dia)}</dd>
+              </div>
+              <div>
+                <dt className="dato-label">Hora</dt>
+                <dd className="dato-valor">{formatearHoraAMPM(eventoSeleccionado.hora)}</dd>
+              </div>
+              <div>
+                <dt className="dato-label">Celular</dt>
+                <dd className="dato-valor">{eventoSeleccionado.celular}</dd>
+              </div>
+              <div>
+                <dt className="dato-label">Categoría</dt>
+                <dd className="dato-valor">{eventoSeleccionado.Categoria}</dd>
+              </div>
+            </dl>
           </div>
         )}
       </Dialog>
-    </div>
+    </>
   );
 };
+
+// Etiqueta de estado: pendiente en ámbar, el resto en verde
+const EstadoChip = ({ estado, idestado }: { estado: string; idestado: number }) => (
+  <span
+    className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+      idestado === 3
+        ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+        : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+    }`}
+  >
+    {estado}
+  </span>
+);
 
 export default CitasScreen;

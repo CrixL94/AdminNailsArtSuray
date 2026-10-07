@@ -212,9 +212,11 @@ const AboutUsCRUD = ({
     <>
       <Toast ref={toast} />
       <Dialog
-        header={editando ? "Editar Registro" : "Nuevo Registro"}
+        header={editando ? "Editar contenido" : "Nuevo contenido"}
         visible={visible}
-        className="sm:w-1/2 w-full sm:p-0 p-2"
+        className="w-[94vw] max-w-2xl"
+        blockScroll
+        draggable={false}
         modal
         onHide={() => {
           cerrarDialog();
@@ -223,13 +225,15 @@ const AboutUsCRUD = ({
           <div className="flex justify-end gap-2">
             <button
               onClick={cerrarDialog}
-              className="text-gray-700 hover:text-gray-800"
+              type="button"
+              className="btn-ghost"
             >
               Cancelar
             </button>
             <button
               onClick={guardarRegistro}
-              className="text-pink-600 hover:text-pink-600"
+              type="button"
+              className="btn-primary"
             >
               {editando ? "Actualizar" : "Guardar"}
             </button>
@@ -238,7 +242,7 @@ const AboutUsCRUD = ({
       >
         <div className="relative">
           {loading && (
-            <div className="absolute inset-0 z-50 bg-white bg-opacity-75 flex items-center justify-center">
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl bg-cream/80 backdrop-blur-sm">
               <div className="text-center">
                 <Loading loading={loading} />
               </div>
@@ -248,8 +252,8 @@ const AboutUsCRUD = ({
           <form className="sm:flex sm:flex-wrap flex-col w-full gap-4 mt-4">
             <div className="flex flex-wrap gap-3 mb-4">
               <div className="flex-auto">
-                <label htmlFor="titulo" className="font-bold block mb-2">
-                  Titulo
+                <label htmlFor="titulo" className="field-label">
+                  Título
                 </label>
                 <InputText
                   id="titulo"
@@ -259,13 +263,13 @@ const AboutUsCRUD = ({
                   className="w-full"
                 />
                 {error.titulo && (
-                  <small className="p-error">Titulo es requerido</small>
+                  <small className="field-error">Titulo es requerido</small>
                 )}
               </div>
 
               <div className="flex-auto">
-                <label htmlFor="subtitulo" className="font-bold block mb-2">
-                  Sub Titulo
+                <label htmlFor="subtitulo" className="field-label">
+                  Subtítulo
                 </label>
                 <InputText
                   id="subtitulo"
@@ -275,14 +279,14 @@ const AboutUsCRUD = ({
                   className="w-full"
                 />
                 {error.subtitulo && (
-                  <small className="p-error">Sub Titulo es requerido</small>
+                  <small className="field-error">Sub Titulo es requerido</small>
                 )}
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3 mb-4">
               <div className="flex-auto">
-                <label htmlFor="mision" className="font-bold block mb-2">
+                <label htmlFor="mision" className="field-label">
                   Misión
                 </label>
                 <InputTextarea
@@ -295,12 +299,12 @@ const AboutUsCRUD = ({
                   cols={30}
                 />
                 {error.mision && (
-                  <small className="p-error">Misión es requerida</small>
+                  <small className="field-error">Misión es requerida</small>
                 )}
               </div>
 
               <div className="flex-auto">
-                <label htmlFor="vision" className="font-bold block mb-2">
+                <label htmlFor="vision" className="field-label">
                   Visión
                 </label>
                 <InputTextarea
@@ -313,14 +317,14 @@ const AboutUsCRUD = ({
                   cols={30}
                 />
                 {error.vision && (
-                  <small className="p-error">Visión es requerida</small>
+                  <small className="field-error">Visión es requerida</small>
                 )}
               </div>
             </div>
 
             <div className="sm:flex gap-3 mb-4">
               <div className="w-full">
-                <label htmlFor="Email" className="font-bold block mb-2">
+                <label htmlFor="Email" className="field-label">
                   Descripción
                 </label>
                 <InputTextarea
@@ -333,7 +337,7 @@ const AboutUsCRUD = ({
                   cols={30}
                 />
                 {error.descripcion && (
-                  <small className="p-error">Descripción es requerida</small>
+                  <small className="field-error">Descripción es requerida</small>
                 )}
               </div>
             </div>
@@ -341,10 +345,10 @@ const AboutUsCRUD = ({
             <div className="sm:w-1/2 w-full">
               <label
                 htmlFor="img_url_fondo"
-                className="font-bold block mb-2 cursor-pointer"
+                className="field-label cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
-                Imagen de Fondo (haz clic en la imagen para cambiar)
+                Imagen de fondo · haz clic para cambiarla
               </label>
 
               {/* input oculto */}
@@ -372,12 +376,12 @@ const AboutUsCRUD = ({
                   }
                   alt="Vista previa"
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-2 rounded shadow-md w-full object-cover cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                  className="mt-2 max-h-72 w-full cursor-pointer rounded-2xl object-cover ring-1 ring-brand-100 transition hover:opacity-90"
                 />
               )}
 
               {error.imagen_url_fondo && (
-                <small className="p-error">Imagen de fondo es requerida</small>
+                <small className="field-error">Imagen de fondo es requerida</small>
               )}
             </div>
           </form>

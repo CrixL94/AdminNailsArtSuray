@@ -3,14 +3,17 @@ import { supabase } from "../../../supabaseClient";
 import DataTable from "../../../Components/DataTable";
 import Loading from "../../../Components/Loader";
 import { Button } from "primereact/button";
-import { Card } from "primereact/card";
-import { Badge } from "primereact/badge";
 import { Menu } from "primereact/menu";
 import UsuarioCRUD from "./UsuarioCRUD";
 import { toastShow } from "../../../Services/ToastService";
 import { Toast } from "primereact/toast";
 import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog";
 import { InputText } from "primereact/inputtext";
+import { IconField } from "primereact/iconfield";
+import { InputIcon } from "primereact/inputicon";
+import PageHeader from "../../../Components/PageHeader";
+import EmptyState from "../../../Components/EmptyState";
+import EstadoBadge from "../../../Components/EstadoBadge";
 
 const UsuariosScreen = () => {
   const menuRef = useRef<Menu[]>([]);
@@ -98,9 +101,9 @@ const UsuariosScreen = () => {
       header: "Estado",
       field: "NombreEstado",
       body: (rowData: any) => (
-        <Badge
-          value={rowData.NombreEstado}
-          style={{ backgroundColor: rowData.ColorFondo, color:'black' }}
+        <EstadoBadge
+          nombre={rowData.NombreEstado}
+          color={rowData.ColorFondo}
         />
       ),
       sortable: true,
@@ -113,8 +116,9 @@ const UsuariosScreen = () => {
           <div className="flex justify-end items-center">
             <Button
               icon="pi pi-ellipsis-v"
-              className="p-button-text p-button-sm"
-              style={{ color: 'gray' }} 
+              rounded
+              text
+              aria-label="Acciones"
               onClick={(e) => menuRef.current[rowIndex]?.toggle(e)}
             />
             <Menu
@@ -147,102 +151,92 @@ const UsuariosScreen = () => {
   }, [filtro, usuarios]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <>
       <Toast ref={toast} />
       <ConfirmDialog />
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-2 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Usuarios</h1>
-          <div className="hidden sm:block w-1/2">
-            <InputText
-              placeholder="Filtrar por nombre, email o teléfono..."
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              className="w-full"
-            />
+
+      <PageHeader
+        eyebrow="Administración"
+        title="Usuarios"
+        subtitle="Personas con acceso a este panel."
+        actions={
+          <>
+          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={() => fetchUsuarios()}>
+            <i className="pi pi-sync" />
+          </button>
+          </>
+        }
+      >
+        <IconField iconPosition="left" className="w-full sm:max-w-md">
+          <InputIcon className="pi pi-search" />
+          <InputText
+            placeholder="Buscar por nombre, correo o teléfono…"
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="w-full"
+          />
+        </IconField>
+      </PageHeader>
+
+      {loading ? (
+        <div className="card-soft">
+          <Loading loading={loading} />
+        </div>
+      ) : usuariosFiltrados.length === 0 ? (
+        <div className="card-soft">
+          <EmptyState icon="pi pi-users" title="Sin usuarios" text="No hay usuarios que coincidan con la búsqueda." />
+        </div>
+      ) : (
+        <>
+          {/* Tabla solo visible en pantallas grandes */}
+          <div className="card-soft hidden overflow-hidden sm:block">
+            <DataTable columns={columns} data={usuariosFiltrados} striped hover rows={10} />
           </div>
-          <Button icon="pi pi-sync" rounded aria-label="Filter" onClick={() => fetchUsuarios()}/>
-          <Button icon="pi pi-plus" rounded severity="success" onClick={() => abrirDialog()}/>
-        </div>
 
-        <div className="sm:bg-white sm:rounded sm:shadow sm:p-4 h-[52rem] overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-screen">
-              <Loading loading={loading} />
-            </div>
-          ) : (
-            <>
-              {/* Tabla solo visible en pantallas grandes */}
-              <div className="hidden sm:block">
-                <DataTable
-                  columns={columns}
-                  data={usuariosFiltrados}
-                  striped
-                  hover
-                  rows={5}
-                />
-              </div>
-
-              {/* Tarjetas para pantallas pequeñas */}
-              <div className="sm:hidden">
-                <div className="mb-4">
-                  <InputText
-                    placeholder="Filtrar por nombre, email o teléfono..."
-                    value={filtro}
-                    onChange={(e) => setFiltro(e.target.value)}
-                    className="w-full"
-                  />
+          {/* Tarjetas para pantallas pequeñas */}
+          <div className="flex flex-col gap-3 sm:hidden">
+            {usuariosFiltrados.map((user, index) => (
+              <article key={user.id} className="card-soft p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 pt-1">
+                    <h3 className="truncate font-medium text-ink-900">{user.Nombre}</h3>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <EstadoBadge
+                      nombre={user.NombreEstado}
+                      color={user.ColorFondo}
+                    />
+                    <Button
+                      icon="pi pi-ellipsis-v"
+                      rounded
+                      text
+                      aria-label="Acciones"
+                      onClick={(e) => menuRef.current[index]?.toggle(e)}
+                    />
+                    <Menu
+                      model={getActionItems(user)}
+                      popup
+                      ref={(el) => {
+                        menuRef.current[index] = el!;
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="flex flex-col gap-4 h-[76vh] overflow-y-auto">
-                  {usuariosFiltrados.map((user, index) => (
-                    <div key={user.id} className="relative">
-                      <div className="absolute top-2 right-2 flex items-center gap-2">
-                        <Badge
-                          value={user.NombreEstado}
-                          className="text-white text-xs"
-                          style={{ backgroundColor: user.ColorFondo || "#999" }}
-                        />
-                        <Button
-                          icon="pi pi-ellipsis-v"
-                          className="p-button-text p-button-sm"
-                          style={{ color: 'gray' }}
-                          onClick={(e) => menuRef.current[index]?.toggle(e)}
-                        />
-                        <Menu
-                          model={getActionItems(user)}
-                          popup
-                          ref={(el) => {
-                            menuRef.current[index] = el!;
-                          }}
-                        />
-                      </div>
-                      <Card>
-                        <div className="text-sm text-gray-700 space-y-1 mt-3">
-                          {/* <p>
-                            <span className="font-semibold">ID:</span> {user.id}
-                          </p> */}
-                          <p>
-                            <span className="font-semibold">Nombre:</span>{" "}
-                            {user.Nombre}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Correo:</span>{" "}
-                            {user.Email}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Celular:</span>{" "}
-                            {user.Telefono}
-                          </p>
-                        </div>
-                      </Card>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </main>
+                <dl className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <dt className="dato-label">Correo</dt>
+                    <dd className="dato-valor break-words">{user.Email}</dd>
+                  </div>
+                  <div>
+                    <dt className="dato-label">Celular</dt>
+                    <dd className="dato-valor break-words">{user.Telefono}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
 
       <UsuarioCRUD
         visible={dialogVisible}
@@ -250,7 +244,7 @@ const UsuariosScreen = () => {
         usuarioEditar={usuarioEditar}
         fetchUsuarios={fetchUsuarios}
       />
-    </div>
+    </>
   );
 };
 

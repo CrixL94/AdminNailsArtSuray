@@ -6,9 +6,12 @@ import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { toastShow } from "../../../Services/ToastService";
 import { Toast } from "primereact/toast";
-import { IconField } from "primereact/iconfield";
-import { InputIcon } from "primereact/inputicon";
 import Loading from "../../../Components/Loader";
+
+// Pantalla de Supabase donde se crean las cuentas de acceso (el registro
+// público está desactivado por seguridad)
+const PROYECTO = new URL(import.meta.env.VITE_SUPABASE_URL as string).hostname.split(".")[0];
+const URL_USUARIOS_SUPABASE = `https://supabase.com/dashboard/project/${PROYECTO}/auth/users`;
 
 const UsuarioCRUD = ({
   visible,
@@ -27,7 +30,6 @@ const UsuarioCRUD = ({
   const [estados, setEstados] = useState<{ label: string; value: number }[]>(
     []
   );
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const fetchEstados = async () => {
@@ -35,9 +37,9 @@ const UsuarioCRUD = ({
       .from("Estados")
       .select("IdEstado, NombreEstado");
     setEstados(
-      data
-        ? data.map((e: any) => ({ label: e.NombreEstado, value: e.IdEstado }))
-        : []
+      (data || [])
+        .filter((e: any) => [1, 2].includes(e.IdEstado))
+        .map((e: any) => ({ label: e.NombreEstado, value: e.IdEstado }))
     );
   };
 
@@ -45,7 +47,6 @@ const UsuarioCRUD = ({
     Nombre: "",
     Telefono: "",
     Email: "",
-    Password: "",
     IdEstado: 1,
   };
 
@@ -73,12 +74,6 @@ const UsuarioCRUD = ({
         isValid = false;
       }
     }
-    if (!editando) {
-      if (!values.Password.trim() || values.Password.length < 6) {
-        errores.Password = true;
-        isValid = false;
-      }
-    }
     if (!values.IdEstado) {
       errores.IdEstado = true;
       isValid = false;
@@ -100,88 +95,40 @@ const UsuarioCRUD = ({
       );
       return;
     }
-    const { Nombre, Telefono, Email, Password, IdEstado } = values;
+    const { Nombre, Telefono, Email, IdEstado } = values;
+    const datos = { Nombre, Telefono, Email: Email.trim().toLowerCase(), IdEstado };
 
-    try {
-      setLoading(true);
-      if (!editando) {
-        // Registrar en auth
-        const { error: authError } = await supabase.auth.signUp(
-          {
-            email: Email,
-            password: Password,
-          }
-        );
-
-        if (authError) {
-          toastShow(
-            toast,
-            "error",
-            "Error de autenticación",
-            authError.message,
-            3000
-          );
-        }
-
-        // Insertar en tabla Usuarios
-        const { error: insertError } = await supabase
-          .from("Usuarios")
-          .insert([{ Nombre, Telefono, Email, IdEstado }]);
-
-        if (insertError) {
-          toastShow(
-            toast,
-            "error",
-            "Error al guardar",
-            insertError.message,
-            3000
-          );
-        }
-
-        // Éxito
-        toastShow(
-          toast,
-          "success",
-          "Usuario creado",
-          "Registro guardado exitosamente",
-          3000
-        );
-      } else {
-        // Actualizar usuario existente
-        const { error: updateError } = await supabase
-          .from("Usuarios")
-          .update({ Nombre, Telefono, Email, IdEstado })
-          .eq("id", usuarioEditar.id);
-
-        if (updateError) {
-          toastShow(
-            toast,
-            "error",
-            "Error al actualizar",
-            updateError.message,
-            3000
-          );
-        }
-
-        // Éxito
-        toastShow(
-          toast,
-          "success",
-          "Usuario actualizado",
-          "Registro actualizado exitosamente",
-          3000
-        );
-      }
-
-      setTimeout(() => {
-        fetchUsuarios();
-        cerrarDialog();
-      }, 1000);
-    } catch (error: any) {
-      toastShow(toast, "error", "Error inesperado", error.message, 3000);
-      setLoading(false);
-    }
+    setLoading(true);
+    const { error: guardarError } = editando
+      ? await supabase.from("Usuarios").update(datos).eq("id", usuarioEditar.id)
+      : await supabase.from("Usuarios").insert([datos]);
     setLoading(false);
+
+    if (guardarError) {
+      toastShow(
+        toast,
+        "error",
+        editando ? "Error al actualizar" : "Error al guardar",
+        guardarError.message,
+        4000
+      );
+      return;
+    }
+
+    toastShow(
+      toast,
+      "success",
+      editando ? "Usuario actualizado" : "Usuario agregado",
+      editando
+        ? "Los cambios se guardaron correctamente"
+        : "Si aún no tiene cuenta, créala en Supabase con el mismo correo",
+      4000
+    );
+
+    setTimeout(() => {
+      fetchUsuarios();
+      cerrarDialog();
+    }, 800);
   };
 
   const cerrarDialog = () => {
@@ -199,7 +146,6 @@ const UsuarioCRUD = ({
       if (usuarioEditar) {
         setValues({
           ...usuarioEditar,
-          Password: "",
           IdEstado: usuarioEditar.IdEstado || 1,
         });
       } else {
@@ -212,9 +158,11 @@ const UsuarioCRUD = ({
     <>
       <Toast ref={toast} />
       <Dialog
-        header={editando ? "Editar Usuario" : "Nuevo Usuario"}
+        header={editando ? "Editar usuario" : "Nuevo usuario"}
         visible={visible}
-        className="sm:w-1/2 w-full sm:p-0 p-2"
+        className="w-[94vw] max-w-2xl"
+        blockScroll
+        draggable={false}
         modal
         onHide={() => {
           cerrarDialog();
@@ -223,13 +171,15 @@ const UsuarioCRUD = ({
           <div className="flex justify-end gap-2">
             <button
               onClick={cerrarDialog}
-              className="text-gray-700 hover:text-gray-800"
+              type="button"
+              className="btn-ghost"
             >
               Cancelar
             </button>
             <button
               onClick={guardarUsuario}
-              className="text-pink-600 hover:text-pink-600"
+              type="button"
+              className="btn-primary"
             >
               {editando ? "Actualizar" : "Guardar"}
             </button>
@@ -238,7 +188,7 @@ const UsuarioCRUD = ({
       >
         <div className="relative">
           {loading && (
-            <div className="absolute inset-0 z-50 bg-white bg-opacity-75 flex items-center justify-center">
+            <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl bg-cream/80 backdrop-blur-sm">
               <div className="text-center">
                 <Loading loading={loading} />
               </div>
@@ -248,7 +198,7 @@ const UsuarioCRUD = ({
           <form className="sm:flex sm:flex-wrap flex-col w-full gap-4 mt-4">
             <div className="flex flex-wrap gap-3 mb-4">
               <div className="flex-auto">
-                <label htmlFor="nombre" className="font-bold block mb-2">
+                <label htmlFor="nombre" className="field-label">
                   Nombre
                 </label>
                 <InputText
@@ -259,15 +209,15 @@ const UsuarioCRUD = ({
                   className="w-full"
                 />
                 {error.Nombre && (
-                  <small className="p-error">Nombre es requerido</small>
+                  <small className="field-error">Nombre es requerido</small>
                 )}
               </div>
               <div className="flex-auto">
                 <label
                   htmlFor="numero-celular"
-                  className="font-bold block mb-2"
+                  className="field-label"
                 >
-                  Numero Celular
+                  Número de celular
                 </label>
                 <InputText
                   id="numero-celular"
@@ -278,14 +228,14 @@ const UsuarioCRUD = ({
                   className="w-full"
                 />
                 {error.Telefono && (
-                  <small className="p-error">Telefono es requerido</small>
+                  <small className="field-error">Telefono es requerido</small>
                 )}
               </div>
             </div>
 
             <div className="sm:flex gap-3 mb-4">
               <div className="sm:w-1/2 w-full">
-                <label htmlFor="Email" className="font-bold block mb-2">
+                <label htmlFor="Email" className="field-label">
                   Email
                 </label>
                 <InputText
@@ -296,12 +246,15 @@ const UsuarioCRUD = ({
                   className="w-full"
                 />
                 {error.Email && (
-                  <small className="p-error">Email es requerido</small>
+                  <small className="field-error">Escribe un correo válido</small>
                 )}
+                <small className="mt-1 block text-xs text-ink-400">
+                  Debe ser el mismo correo de su cuenta de acceso.
+                </small>
               </div>
 
               <div className="sm:w-1/2 sm:mt-0 mt-4 w-full">
-                <label htmlFor="IdEstado" className="font-bold block mb-2">
+                <label htmlFor="IdEstado" className="field-label">
                   Estado
                 </label>
                 <Dropdown
@@ -319,35 +272,33 @@ const UsuarioCRUD = ({
             </div>
 
             {!editando && (
-              <div className="flex flex-wrap gap-3 mb-4">
-                <div className="sm:w-1/2 w-full">
-                  <label htmlFor="nombre" className="font-bold block mb-2">
-                    Contraseña
-                  </label>
-                  <IconField>
-                    <InputIcon
-                      className={`cursor-pointer ${
-                        showPassword ? "pi pi-eye-slash" : "pi pi-eye"
-                      }`}
-                      onClick={() => setShowPassword(!showPassword)}
-                    />
-                    <InputText
-                      id="Password"
-                      name="Password"
-                      type={showPassword ? "text" : "Password"}
-                      value={values?.Password}
-                      onChange={handleInputChange}
-                      className={`w-full ${
-                        error?.Password ? "border-red-500 border-2" : ""
-                      }`}
-                    />
-                  </IconField>
-                  {error.Password && (
-                    <small className="text-red-500 text-sm">
-                      Contraseña es requerida
-                    </small>
-                  )}
-                </div>
+              <div className="rounded-2xl bg-brand-50 p-4 text-sm text-ink-700 ring-1 ring-brand-100">
+                <p className="mb-2 flex items-center gap-2 font-medium text-brand-800">
+                  <i className="pi pi-info-circle" />
+                  La cuenta de acceso se crea en Supabase
+                </p>
+                <ol className="list-decimal space-y-1 pl-5 text-ink-600">
+                  <li>Guarda aquí sus datos.</li>
+                  <li>
+                    En Supabase, ve a{" "}
+                    <a
+                      href={URL_USUARIOS_SUPABASE}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-brand-700 underline underline-offset-2"
+                    >
+                      Authentication → Users
+                    </a>{" "}
+                    → <strong>Add user</strong> → <strong>Create new user</strong>.
+                  </li>
+                  <li>
+                    Usa el <strong>mismo correo</strong>, ponle una contraseña y marca{" "}
+                    <strong>Auto Confirm User</strong>.
+                  </li>
+                </ol>
+                <p className="mt-2 text-xs text-ink-400">
+                  Solo podrá entrar al panel si su estado aquí es Activo.
+                </p>
               </div>
             )}
           </form>

@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { Toast } from "primereact/toast";
 import { supabase } from "../../../supabaseClient";
 import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
-import { Badge } from "primereact/badge";
 import Loading from "../../../Components/Loader";
 import DataTable from "../../../Components/DataTable";
 import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog";
 import { Button } from "primereact/button";
 import { toastShow } from "../../../Services/ToastService";
 import { Menu } from "primereact/menu";
-import { Card } from "primereact/card";
 import { MultiSelect } from "primereact/multiselect";
+import PageHeader from "../../../Components/PageHeader";
+import EmptyState from "../../../Components/EmptyState";
+import EstadoBadge from "../../../Components/EstadoBadge";
 
 const MensajesScreen = () => {
   const menuRef = useRef<Menu[]>([]);
@@ -191,13 +192,9 @@ const MensajesScreen = () => {
       header: "Estado",
       field: "NombreEstado",
       body: (rowData: any) => (
-        <Badge
-          value={rowData.NombreEstado}
-          style={{
-            backgroundColor: rowData.ColorFondo,
-            color: "black",
-            cursor: "pointer",
-          }}
+        <EstadoBadge
+          nombre={rowData.NombreEstado}
+          color={rowData.ColorFondo}
           onClick={() => abrirDialogEstados(rowData)}
         />
       ),
@@ -211,8 +208,9 @@ const MensajesScreen = () => {
           <div className="flex justify-end items-center">
             <Button
               icon="pi pi-ellipsis-v"
-              className="p-button-text p-button-sm"
-              style={{ color: "gray" }}
+              rounded
+              text
+              aria-label="Acciones"
               onClick={(e) => menuRef.current[rowIndex]?.toggle(e)}
             />
             <Menu
@@ -233,126 +231,101 @@ const MensajesScreen = () => {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <>
       <Toast ref={toast} />
       <ConfirmDialog />
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Mensajes Recibidos</h1>
-          <Button
-            icon="pi pi-sync"
-            rounded
-            aria-label="Filter"
-            onClick={() => getInfo()}
-          />
 
-          <div className="hidden sm:block">
-            <MultiSelect
-              value={selectedInfo}
-              options={estados}
-              onChange={(e) => setSelectedInfo(e.value)}
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Filtar por Estado"
-              className="w-full"
-              display="chip"
-            />
-          </div>
-        </div>
-
-        <div className="my-3 sm:hidden">
-          <MultiSelect
+      <PageHeader
+        eyebrow="Agenda"
+        title="Mensajes"
+        subtitle="Lo que te escriben desde el formulario de contacto."
+        actions={
+          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={() => getInfo()}>
+            <i className="pi pi-sync" />
+          </button>
+        }
+      >
+        <MultiSelect
             value={selectedInfo}
             options={estados}
             onChange={(e) => setSelectedInfo(e.value)}
             optionLabel="label"
             optionValue="value"
-            placeholder="Filtar por Estado"
-            className="w-full"
+            placeholder="Filtrar por estado"
+            className="w-full sm:w-80"
             display="chip"
+            showClear
           />
+      </PageHeader>
+
+      {loading ? (
+        <div className="card-soft">
+          <Loading loading={loading} />
         </div>
+      ) : filteredData.length === 0 ? (
+        <div className="card-soft">
+          <EmptyState icon="pi pi-comments" title="Sin mensajes" text="No hay mensajes con este filtro." />
+        </div>
+      ) : (
+        <>
+          {/* Tabla solo visible en pantallas grandes */}
+          <div className="card-soft hidden overflow-hidden sm:block">
+            <DataTable columns={columns} data={filteredData} striped hover rows={10} />
+          </div>
 
-        <div className="sm:bg-white sm:rounded sm:shadow sm:p-4 h-[52rem] overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-screen">
-              <Loading loading={loading} />
-            </div>
-          ) : (
-            <>
-              {/* Tabla solo visible en pantallas grandes */}
-              <div className="hidden sm:block">
-                <DataTable
-                  columns={columns}
-                  data={filteredData}
-                  striped
-                  hover
-                  rows={5}
-                />
-              </div>
-
-              {/* Tarjetas para pantallas pequeñas */}
-              <div className="sm:hidden">
-                <div className="flex flex-col gap-4 h-[85vh] overflow-y-auto">
-                  {filteredData.map((info, index) => (
-                    <div key={info.id} className="relative">
-                      <div className="absolute top-2 right-2 flex items-center gap-2">
-                        <Badge
-                          value={info.NombreEstado}
-                          className="text-white text-xs"
-                          style={{
-                            backgroundColor: info.ColorFondo,
-                            color: "black",
-                          }}
-                          onClick={() => abrirDialogEstados(info)}
-                        />
-                        <Button
-                          icon="pi pi-ellipsis-v"
-                          className="p-button-text p-button-sm"
-                          style={{ color: "gray" }}
-                          onClick={(e) => menuRef.current[index]?.toggle(e)}
-                        />
-                        <Menu
-                          model={getActionItems(info)}
-                          popup
-                          ref={(el) => {
-                            menuRef.current[index] = el!;
-                          }}
-                        />
-                      </div>
-                      <Card>
-                        <div className="text-sm text-gray-700 space-y-1 mt-3">
-                          {/* <p>
-                            <span className="font-semibold">ID:</span> {info.id}
-                          </p> */}
-                          <p>
-                            <span className="font-semibold">Nombre:</span>{" "}
-                            {info.nombre}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Celular:</span>{" "}
-                            {info.celular}
-                          </p>
-                          {info.email && (
-                            <p>
-                              <span className="font-semibold">Email:</span>{" "}
-                              {info.email}
-                            </p>
-                          )}
-                          <p>
-                            <span className="font-semibold">Mensaje:</span>{" "}
-                            {info.mensaje}
-                          </p>
-                        </div>
-                      </Card>
-                    </div>
-                  ))}
+          {/* Tarjetas para pantallas pequeñas */}
+          <div className="flex flex-col gap-3 sm:hidden">
+            {filteredData.map((info, index) => (
+              <article key={info.id} className="card-soft p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="min-w-0 truncate pt-1 font-medium text-ink-900">{info.nombre}</h3>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <EstadoBadge
+                      nombre={info.NombreEstado}
+                      color={info.ColorFondo}
+                      onClick={() => abrirDialogEstados(info)}
+                    />
+                    <Button
+                      icon="pi pi-ellipsis-v"
+                      rounded
+                      text
+                      aria-label="Acciones"
+                      onClick={(e) => menuRef.current[index]?.toggle(e)}
+                    />
+                    <Menu
+                      model={getActionItems(info)}
+                      popup
+                      ref={(el) => {
+                        menuRef.current[index] = el!;
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-      </main>
+                <dl className="mt-3 space-y-3">
+                  {info.celular && (
+                    <div>
+                      <dt className="dato-label">Celular</dt>
+                      <dd className="dato-valor break-words">{info.celular}</dd>
+                    </div>
+                  )}
+                  {info.email && (
+                    <div>
+                      <dt className="dato-label">Email</dt>
+                      <dd className="dato-valor break-words">{info.email}</dd>
+                    </div>
+                  )}
+                  {info.mensaje && (
+                    <div>
+                      <dt className="dato-label">Mensaje</dt>
+                      <dd className="dato-valor break-words">{info.mensaje}</dd>
+                    </div>
+                  )}
+                </dl>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
 
       <DialogCambiarEstado
         dialogEstadoVisible={dialogEstadoVisible}
@@ -362,7 +335,7 @@ const MensajesScreen = () => {
         onEstadoChange={onEstadoChange}
         selectedEstado={selectedEstado}
       />
-    </div>
+    </>
   );
 };
 
