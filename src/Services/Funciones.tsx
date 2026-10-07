@@ -100,6 +100,87 @@ export async function listarUrlsPublicasRaiz(
   return urls;
 }
 
+/**
+ * Nombre seguro para Supabase Storage: sin acentos, espacios ni símbolos.
+ * "Uñas Rojas (1).JPG" -> "Unas-Rojas-1.JPG"
+ */
+export function nombreSeguro(nombre: string) {
+  return nombre
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-(?=\.)|-$/g, "");
+}
+
+/**
+ * Reduce y convierte una imagen a WebP en el navegador antes de subirla.
+ * Una foto de celular de 4–8 MB queda en ~100–250 KB.
+ * Si el navegador no puede procesarla (HEIC, GIF, SVG…) o el resultado no
+ * es más liviano, devuelve el archivo original.
+ * @param file - Imagen seleccionada
+ * @param maxLado - Lado más largo en píxeles (por defecto 1600)
+ * @param calidad - Calidad WebP entre 0 y 1 (por defecto 0.8)
+ */
+export async function comprimirImagen(
+  file: File,
+  maxLado = 1600,
+  calidad = 0.8
+): Promise<File> {
+  const noProcesables = ["image/gif", "image/svg+xml"];
+  if (!file.type.startsWith("image/") || noProcesables.includes(file.type)) {
+    return file;
+  }
+
+  let bitmap: ImageBitmap;
+  try {
+    // "from-image" respeta la rotación EXIF de las fotos de celular
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    return file;
+  }
+
+  const escala = Math.min(1, maxLado / Math.max(bitmap.width, bitmap.height));
+  const ancho = Math.round(bitmap.width * escala);
+  const alto = Math.round(bitmap.height * escala);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = ancho;
+  canvas.height = alto;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    bitmap.close();
+    return file;
+  }
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bitmap, 0, 0, ancho, alto);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/webp", calidad)
+  );
+
+  // Algunos navegadores antiguos devuelven PNG en lugar de WebP
+  if (!blob || blob.type !== "image/webp" || blob.size >= file.size) {
+    return file;
+  }
+
+  const nombre = file.name.replace(/\.[^.]+$/, "") + ".webp";
+  return new File([blob], nombre, { type: "image/webp", lastModified: Date.now() });
+}
+
+/**
+ * Comprime la imagen y genera un nombre único y seguro para subirla.
+ * @returns El archivo listo para subir y su nombre (ej: "1754400000000-k3f9_unas.webp")
+ */
+export async function prepararImagen(file: File) {
+  const archivo = await comprimirImagen(file);
+  // El sufijo aleatorio evita choques al subir varias fotos en el mismo milisegundo
+  const unico = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const nombre = `${unico}_${nombreSeguro(archivo.name)}`;
+  return { archivo, nombre };
+}
+
 //FORMATEAR HORA A AM/PM
 export const formatearHoraAMPM = (hora: string) => {
   const [h, m] = hora.split(":").map(Number);

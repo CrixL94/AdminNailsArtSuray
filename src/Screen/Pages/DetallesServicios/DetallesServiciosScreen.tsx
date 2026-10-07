@@ -5,11 +5,12 @@ import { supabase } from "../../../supabaseClient";
 import { toastShow } from "../../../Services/ToastService";
 import Loading from "../../../Components/Loader";
 import { Menu } from "primereact/menu";
-import { Badge } from "primereact/badge";
 import DataTable from "../../../Components/DataTable";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
-import { Card } from "primereact/card";
 import { MultiSelect } from "primereact/multiselect";
+import PageHeader from "../../../Components/PageHeader";
+import EmptyState from "../../../Components/EmptyState";
+import EstadoBadge from "../../../Components/EstadoBadge";
 import DialogCambiarEstado from "../../../Components/DialogCambiarEstado";
 import DetallesServiciosCRUD from "./DetallesServiciosCRUD";
 
@@ -180,21 +181,27 @@ const DetallesServiciosScreen = () => {
   const columns = [
     // { header: "ID", field: "id", sortable: true },
     { header: "Servicio", field: "servicio_principal", sortable: true },
-    { header: "Detalle Servicio", field: "nombre", sortable: true },
-    { header: "Descripcion", field: "descripcion", sortable: true },
-    { header: "Precio", field: "precio", sortable: true },
-    { header: "Tiempo (Minutos)", field: "duracion_minutos", sortable: true },
+    { header: "Detalle", field: "nombre", sortable: true },
+    { header: "Descripción", field: "descripcion", sortable: true },
+    {
+      header: "Precio",
+      field: "precio",
+      sortable: true,
+      body: (rowData: any) => <span className="whitespace-nowrap">L. {rowData.precio}</span>,
+    },
+    {
+      header: "Duración",
+      field: "duracion_minutos",
+      sortable: true,
+      body: (rowData: any) => <span className="whitespace-nowrap">{rowData.duracion_minutos} min</span>,
+    },
     {
       header: "Estado",
       field: "NombreEstado",
       body: (rowData: any) => (
-        <Badge
-          value={rowData.NombreEstado}
-          style={{
-            backgroundColor: rowData.ColorFondo,
-            color: "black",
-            cursor: "pointer",
-          }}
+        <EstadoBadge
+          nombre={rowData.NombreEstado}
+          color={rowData.ColorFondo}
           onClick={() => abrirDialogEstados(rowData)}
         />
       ),
@@ -208,8 +215,9 @@ const DetallesServiciosScreen = () => {
           <div className="flex justify-end items-center">
             <Button
               icon="pi pi-ellipsis-v"
-              className="p-button-text p-button-sm"
-              style={{ color: "gray" }}
+              rounded
+              text
+              aria-label="Acciones"
               onClick={(e) => menuRef.current[rowIndex]?.toggle(e)}
             />
             <Menu
@@ -230,141 +238,104 @@ const DetallesServiciosScreen = () => {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <>
       <Toast ref={toast} />
       <ConfirmDialog />
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Detalles Servicios</h1>
-          <Button
-            icon="pi pi-sync"
-            rounded
-            aria-label="Filter"
-            onClick={() => getInfo()}
-          />
 
-          <Button
-            icon="pi pi-plus"
-            rounded
-            severity="success"
-            onClick={() => abrirDialog()}
-          />
+      <PageHeader
+        eyebrow="Sitio web"
+        title="Detalle de servicios"
+        subtitle="Las opciones de cada servicio que aparecen en el sitio y en el formulario de reserva."
+        actions={
+          <>
+          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={() => getInfo()}>
+            <i className="pi pi-sync" />
+          </button>
+          <button type="button" className="btn-primary" onClick={() => abrirDialog()}>
+            <i className="pi pi-plus" />
+            Nuevo detalle
+          </button>
+          </>
+        }
+      >
+        <MultiSelect
+          value={selectedServicios}
+          options={servicios}
+          onChange={(e) => setSelectedServicios(e.value)}
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Filtrar por servicio"
+          className="w-full sm:w-80"
+          display="chip"
+          showClear
+        />
+      </PageHeader>
 
-          <div className="hidden sm:block">
-            <MultiSelect
-              value={selectedServicios}
-              options={servicios}
-              onChange={(e) => setSelectedServicios(e.value)}
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Filtar por Servicio"
-              className="w-full"
-              display="chip"
-            />
+      {loading ? (
+        <div className="card-soft">
+          <Loading loading={loading} />
+        </div>
+      ) : filteredData.length === 0 ? (
+        <div className="card-soft">
+          <EmptyState icon="pi pi-list-check" title="Sin detalles" text="No hay detalles para este filtro." />
+        </div>
+      ) : (
+        <>
+          {/* Tabla solo visible en pantallas grandes */}
+          <div className="card-soft hidden overflow-hidden sm:block">
+            <DataTable columns={columns} data={filteredData} striped hover rows={10} />
           </div>
-        </div>
 
-        <div className="my-3 sm:hidden">
-          <MultiSelect
-            value={selectedServicios}
-            options={servicios}
-            onChange={(e) => setSelectedServicios(e.value)}
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Selecciona servicios"
-            className="w-full"
-            display="chip"
-          />
-        </div>
-
-        <div className="sm:bg-white sm:rounded sm:shadow sm:p-4 h-[52rem] overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-screen">
-              <Loading loading={loading} />
-            </div>
-          ) : (
-            <>
-              {/* Tabla solo visible en pantallas grandes */}
-              <div className="hidden sm:block">
-                <DataTable
-                  columns={columns}
-                  data={filteredData}
-                  striped
-                  hover
-                  rows={5}
-                />
-              </div>
-
-              {/* Tarjetas para pantallas pequeñas */}
-              <div className="sm:hidden">
-                <div className="flex flex-col gap-4 h-[85vh] overflow-y-auto">
-                  {filteredData.map((info, index) => (
-                    <div key={info.id} className="relative">
-                      <div className="absolute top-2 right-2 flex items-center gap-2">
-                        <Badge
-                          value={info.NombreEstado}
-                          className="text-white text-xs"
-                          style={{
-                            backgroundColor: info.ColorFondo,
-                            color: "black",
-                          }}
-                          onClick={() => abrirDialogEstados(info)}
-                        />
-                        <Button
-                          icon="pi pi-ellipsis-v"
-                          className="p-button-text p-button-sm"
-                          style={{ color: "gray" }}
-                          onClick={(e) => menuRef.current[index]?.toggle(e)}
-                        />
-                        <Menu
-                          model={getActionItems(info)}
-                          popup
-                          ref={(el) => {
-                            menuRef.current[index] = el!;
-                          }}
-                        />
-                      </div>
-                      <Card>
-                        <div className="text-sm text-gray-700 space-y-1 mt-3">
-                          {/* <p>
-                            <span className="font-semibold">ID:</span> {info.id}
-                          </p> */}
-                          <p>
-                            <span className="font-semibold">
-                              Tipo Servicio:
-                            </span>{" "}
-                            {info.servicio_principal}
-                          </p>
-                          <p>
-                            <span className="font-semibold">
-                              Detalle Servicio:
-                            </span>{" "}
-                            {info.nombre}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Descripción:</span>{" "}
-                            {info.descripcion}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Precio:</span>{" "}
-                            {info.precio}
-                          </p>
-                          <p>
-                            <span className="font-semibold">
-                              Tiempo estimado:
-                            </span>{" "}
-                            {info.duracion_minutos} min.
-                          </p>
-                        </div>
-                      </Card>
-                    </div>
-                  ))}
+          {/* Tarjetas para pantallas pequeñas */}
+          <div className="flex flex-col gap-3 sm:hidden">
+            {filteredData.map((info, index) => (
+              <article key={info.id} className="card-soft p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 pt-1">
+                    <h3 className="truncate font-medium text-ink-900">{info.nombre}</h3>
+                    <p className="text-sm text-ink-500">{info.servicio_principal}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <EstadoBadge
+                      nombre={info.NombreEstado}
+                      color={info.ColorFondo}
+                      onClick={() => abrirDialogEstados(info)}
+                    />
+                    <Button
+                      icon="pi pi-ellipsis-v"
+                      rounded
+                      text
+                      aria-label="Acciones"
+                      onClick={(e) => menuRef.current[index]?.toggle(e)}
+                    />
+                    <Menu
+                      model={getActionItems(info)}
+                      popup
+                      ref={(el) => {
+                        menuRef.current[index] = el!;
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-      </main>
+                <dl className="mt-3 grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <dt className="dato-label">Descripción</dt>
+                    <dd className="dato-valor break-words">{info.descripcion}</dd>
+                  </div>
+                  <div>
+                    <dt className="dato-label">Precio</dt>
+                    <dd className="dato-valor break-words">L. {info.precio}</dd>
+                  </div>
+                  <div>
+                    <dt className="dato-label">Duración</dt>
+                    <dd className="dato-valor break-words">{info.duracion_minutos} min</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
 
       <DetallesServiciosCRUD
         visible={dialogVisible}
@@ -381,7 +352,7 @@ const DetallesServiciosScreen = () => {
         onEstadoChange={onEstadoChange}
         selectedEstado={selectedEstado}
       />
-    </div>
+    </>
   );
 };
 

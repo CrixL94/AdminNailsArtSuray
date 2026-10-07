@@ -1,0 +1,3 @@
+/* Orden de capas: el tema de PrimeReact va después del preflight de Tailwind
+   y antes de las utilidades. Debe importarse antes que cualquier otro CSS. */
+@layer theme, base, primereact, components, utilities;

@@ -1,10 +1,11 @@
-import { Button } from "primereact/button";
 import { Toast } from "primereact/toast";
 import { useEffect, useRef, useState } from "react";
 import { listarUrlsPublicas } from "../../../Services/Funciones";
 import { supabase } from "../../../supabaseClient";
 import Loading from "../../../Components/Loader";
-import { Badge } from "primereact/badge";
+import PageHeader from "../../../Components/PageHeader";
+import EmptyState from "../../../Components/EmptyState";
+import EstadoBadge from "../../../Components/EstadoBadge";
 import { Menu } from "primereact/menu";
 import ServiciosCRUD from "./ServiciosCRUD";
 import { toastShow } from "../../../Services/ToastService";
@@ -247,110 +248,98 @@ const ServiciosScreen = () => {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <>
       <Toast ref={toast} />
       <ConfirmDialog />
-      <main className="flex-1 bg-gray-100 sm:p-6 p-2 relative">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="sm:text-3xl text-2xl font-bold">Servicios</h1>
-          <Button
-            icon="pi pi-sync"
-            rounded
-            aria-label="Filter"
-            onClick={() => getInfo()}
-          />
-          <Button
-            icon="pi pi-plus"
-            rounded
-            severity="success"
-            onClick={() => abrirDialog()}
-          />
-          <Button
-            icon="pi pi-list"
-            label="Detalles Servicios"
-            className="p-button-sm"
-            rounded
-            severity="info"
-            onClick={() => navigate("../detalles/servicios")}
+
+      <PageHeader
+        eyebrow="Sitio web"
+        title="Servicios"
+        subtitle="Las tarjetas de servicios que se muestran en el sitio."
+        actions={
+          <>
+          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={() => getInfo()}>
+            <i className="pi pi-sync" />
+          </button>
+          <button type="button" className="btn-ghost" onClick={() => navigate("../detalles/servicios")}>
+            <i className="pi pi-list-check" />
+            Detalle de servicios
+          </button>
+          <button type="button" className="btn-primary" onClick={() => abrirDialog()}>
+            <i className="pi pi-plus" />
+            Nuevo servicio
+          </button>
+          </>
+        }
+      />
+
+      {loading ? (
+        <div className="card-soft">
+          <Loading loading={loading} />
+        </div>
+      ) : inicioData.length === 0 ? (
+        <div className="card-soft">
+          <EmptyState
+            icon="pi pi-sparkles"
+            title="Sin servicios"
+            text="Agrega el primer servicio para mostrarlo en el sitio."
+            action={<button type="button" className="btn-primary" onClick={() => abrirDialog()}><i className="pi pi-plus" />Nuevo servicio</button>}
           />
         </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {inicioData.map((servicio: any, index: number) => {
+            const imagen = filesData.find(
+              (img: any) => img.nombre === servicio.imagen_url
+            );
 
-        <div className="sm:bg-white sm:rounded sm:shadow sm:h-[52rem] h-[35rem] sm:p-6 p-0 overflow-y-auto">
-          {loading || !filesData ? (
-            <div className="flex items-center justify-center h-screen">
-              <Loading loading={loading} />
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6">
-              {inicioData.map((servicio: any, index: number) => {
-                const imagen = filesData.find(
-                  (img: any) => img.nombre === servicio.imagen_url
-                );
-
-                return (
-                  <div
-                    key={servicio.id}
-                    className="sm:bg-gray-100 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-300"
-                  >
-                    <div className="flex items-center justify-end p-1">
-                      <Badge
-                        value={servicio.NombreEstado}
-                        className="text-white text-xs"
-                        style={{ backgroundColor: servicio.ColorFondo }}
-                        onClick={() => abrirDialogEstados(servicio)}
-                      />
-
-                      <Button
-                        icon="pi pi-ellipsis-v"
-                        className="p-button-text p-button-sm"
-                        style={{ color: "gray" }}
-                        onClick={(e) => menuRef.current[index]?.toggle(e)}
-                      />
-                      <Menu
-                        model={getActionItems(servicio)}
-                        popup
-                        ref={(el) => {
-                          menuRef.current[index] = el!;
-                        }}
-                      />
-                    </div>
-
-                    {/* Imagen */}
-                    {imagen && (
-                      <img
-                        src={imagen.url}
-                        alt={servicio.nombre}
-                        className="w-full object-cover"
-                      />
-                    )}
-
-                    {/* Contenido */}
-                    <div className="p-4 flex flex-col justify-between">
-                      <div>
-                        <h2 className="text-lg font-bold text-purple-600 mb-2">
-                          {servicio.nombre}
-                        </h2>
-                        <p className="text-gray-600 text-sm mb-4">
-                          {servicio.descripcion}
-                        </p>
-                      </div>
-
-                      <div className="flex justify-end">
-                        <button
-                          onClick={() => dialogDetalles(servicio)}
-                          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-full shadow-md hover:bg-purple-700 transition duration-300"
-                        >
-                          Detalles<i className="pi pi-eye"></i>
-                        </button>
-                      </div>
-                    </div>
+            return (
+              <article key={servicio.id} className="card-soft flex flex-col overflow-hidden">
+                <div className="relative aspect-[4/3] bg-brand-100">
+                  {imagen && (
+                    <img src={imagen.url} alt={servicio.nombre} loading="lazy" className="h-full w-full object-cover" />
+                  )}
+                  <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
+                    <EstadoBadge
+                      nombre={servicio.NombreEstado}
+                      color={servicio.ColorFondo}
+                      onClick={() => abrirDialogEstados(servicio)}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Acciones"
+                      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/90 text-ink-700 shadow-soft transition hover:bg-white"
+                      onClick={(e) => menuRef.current[index]?.toggle(e)}
+                    >
+                      <i className="pi pi-ellipsis-v" />
+                    </button>
+                    <Menu
+                      model={getActionItems(servicio)}
+                      popup
+                      ref={(el) => {
+                        menuRef.current[index] = el!;
+                      }}
+                    />
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </div>
+
+                <div className="flex flex-1 flex-col p-5">
+                  <h2 className="heading-md">{servicio.nombre}</h2>
+                  <p className="mt-1 flex-1 text-sm text-ink-500">{servicio.descripcion}</p>
+                  <button
+                    type="button"
+                    onClick={() => dialogDetalles(servicio)}
+                    className="btn-ghost mt-5 w-full"
+                  >
+                    <i className="pi pi-list-check" />
+                    Ver detalles
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
-      </main>
+      )}
 
       <ServiciosCRUD
         visible={dialogVisible}
@@ -374,7 +363,7 @@ const ServiciosScreen = () => {
         selectedinfo={selectedinfo}
         onHide={onHide}
       />
-    </div>
+    </>
   );
 };
 

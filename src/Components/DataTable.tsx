@@ -17,6 +17,7 @@ interface DataTableProps {
   hover?: boolean;
   paginator?: boolean;
   rows?: number;
+  emptyMessage?: string;
 }
 
 const DataTable: React.FC<DataTableProps> = ({
@@ -26,17 +27,20 @@ const DataTable: React.FC<DataTableProps> = ({
   hover = true,
   paginator = false,
   rows = 10,
+  emptyMessage = "No hay registros.",
 }) => {
   const dtProps: PrimeProps<Record<string, any>[]> = {
     value: data,
     stripedRows: striped,
     rowHover: hover,
-    paginator,
+    // La paginación se activa sola cuando hay más filas que "rows"
+    paginator: paginator || data.length > rows,
     rows,
+    emptyMessage,
   };
 
   return (
-    <div className="p-datatable-responsive-demo">
+    <div className="overflow-hidden">
       <PrimeDataTable {...dtProps} className="p-datatable-sm">
         {columns.map((col, index) => (
           <PrimeColumn
