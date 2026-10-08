@@ -24,6 +24,7 @@ const SECCIONES = [
       { to: "/servicios", label: "Servicios", icon: "pi pi-sparkles" },
       { to: "/detalles/servicios", label: "Detalle de servicios", icon: "pi pi-list-check" },
       { to: "/galeria", label: "Galería", icon: "pi pi-images" },
+      { to: "/promociones", label: "Promociones", icon: "pi pi-tag" },
     ],
   },
   {

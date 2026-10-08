@@ -29,8 +29,24 @@ const CitasScreen = () => {
   const getInfo = async () => {
     setLoading(true);
 
-    const { data } = await supabase.from("vw_citas").select("*");
-    setCitas(data || []);
+    const [{ data }, { data: conPromo }] = await Promise.all([
+      supabase.from("vw_citas").select("*"),
+      // Citas agendadas desde una promoción del sitio
+      supabase
+        .from("citas")
+        .select("idcita, promociones(titulo, etiqueta)")
+        .not("idpromocion", "is", null),
+    ]);
+
+    const promos = new Map(
+      (conPromo || []).map((c: any) => [c.idcita, c.promociones])
+    );
+    setCitas(
+      (data || []).map((cita: any) => ({
+        ...cita,
+        promocion: promos.get(cita.idcita) ?? null,
+      }))
+    );
 
     setLoading(false);
   };
@@ -57,7 +73,12 @@ const CitasScreen = () => {
 
     *Día:* ${fechaString}
     *Hora:* ${horaFormateada}
-    *Servicio:* ${info.servicio}
+    *Servicio:* ${info.servicio}${
+      info.promocion
+        ? `
+    *Promoción:* ${textoPromocion(info.promocion)}`
+        : ""
+    }
 
     ¡Estamos emocionadas por atenderte!
     Recuerda llegar 10 minutos antes para tu comodidad.
@@ -114,16 +135,17 @@ const CitasScreen = () => {
 
   //card en calendario
   const renderizarEventoPersonalizado = (arg: any) => {
-    const { nombrecompleto, servicio, hora, Estado, idcita, idestado } =
+    const { nombrecompleto, servicio, hora, Estado, idcita, idestado, promocion } =
       arg.event.extendedProps;
     const pendiente = idestado === 3;
 
     const container = document.createElement("div");
     container.className = `cita-evento ${pendiente ? "cita-pendiente" : ""}`;
     container.innerHTML = `
-      <strong>${nombrecompleto}</strong>
-      <span>${servicio}</span>
-      <span>${formatearHoraAMPM(hora)} · ${Estado}</span>
+      <strong>${escaparHtml(nombrecompleto)}</strong>
+      <span>${escaparHtml(servicio)}</span>
+      ${promocion ? `<span class="cita-promo">${escaparHtml(textoPromocion(promocion))}</span>` : ""}
+      <span>${formatearHoraAMPM(hora)} · ${escaparHtml(Estado)}</span>
       <button type="button" class="btn-eliminar-cita">Eliminar</button>
     `;
 
@@ -204,6 +226,7 @@ const CitasScreen = () => {
                   <div className="min-w-0">
                     <h3 className="truncate font-medium text-ink-900">{info.nombrecompleto}</h3>
                     <p className="text-sm text-ink-500">{info.servicio}</p>
+                    {info.promocion && <PromoChip promocion={info.promocion} />}
                   </div>
                   <EstadoChip estado={info.Estado} idestado={info.idestado} />
                 </div>
@@ -273,6 +296,9 @@ const CitasScreen = () => {
               <div className="min-w-0">
                 <h3 className="font-display text-2xl text-ink-900">{eventoSeleccionado.nombrecompleto}</h3>
                 <p className="text-sm text-ink-500">{eventoSeleccionado.servicio}</p>
+                {eventoSeleccionado.promocion && (
+                  <PromoChip promocion={eventoSeleccionado.promocion} />
+                )}
               </div>
               <EstadoChip estado={eventoSeleccionado.Estado} idestado={eventoSeleccionado.idestado} />
             </div>
@@ -300,6 +326,23 @@ const CitasScreen = () => {
     </>
   );
 };
+
+// El nombre lo escribe la clienta en el sitio: no se inserta como HTML
+const escaparHtml = (texto: unknown) =>
+  String(texto ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!
+  );
+
+const textoPromocion = (promo: { titulo: string; etiqueta?: string | null }) =>
+  promo.etiqueta ? `${promo.titulo} (${promo.etiqueta})` : promo.titulo;
+
+// Indica que la cita se agendó con una promoción
+const PromoChip = ({ promocion }: { promocion: { titulo: string; etiqueta?: string | null } }) => (
+  <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-200">
+    <i className="pi pi-tag text-[0.7rem]" />
+    {textoPromocion(promocion)}
+  </span>
+);
 
 // Etiqueta de estado: pendiente en ámbar, el resto en verde
 const EstadoChip = ({ estado, idestado }: { estado: string; idestado: number }) => (

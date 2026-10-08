@@ -481,6 +481,10 @@ body.p-overflow-hidden .admin-scroll {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.cita-evento .cita-promo {
+  color: #9c5a64;
+  font-weight: 500;
+}
 .cita-evento.cita-pendiente {
   border-left-color: #d97706;
   background: #fffbeb;
@@ -513,4 +517,13 @@ body.p-overflow-hidden .admin-scroll {
 .nav-scroll {
   scrollbar-width: thin;
   scrollbar-color: #ecd0d1 transparent;
+}
+
+/* Interruptor (activar / desactivar) con el color de la marca */
+.p-inputswitch.p-highlight .p-inputswitch-slider,
+.p-inputswitch.p-highlight:not(.p-disabled):hover .p-inputswitch-slider {
+  background: #9c5a64;
+}
+.p-inputswitch.p-focus .p-inputswitch-slider {
+  box-shadow: 0 0 0 0.2rem #ecd0d1;
 }

@@ -12,6 +12,7 @@ import DetallesServiciosScreen from "../Screen/Pages/DetallesServicios/DetallesS
 import MensajesScreen from "../Screen/Admin/Mensajes/MensajesScreen";
 import GaleriaScreen from "../Screen/Pages/Galeria/GaleriaScreen";
 import CitasScreen from "../Screen/Admin/Citas/CitasScreen";
+import PromocionesScreen from "../Screen/Pages/Promociones/PromocionesScreen";
 
 const AppRouter = () => {
   return (
@@ -40,6 +41,7 @@ const AppRouter = () => {
           <Route path="servicios" element={<ServiciosScreen />} />
           <Route path="detalles/servicios" element={<DetallesServiciosScreen />} />
           <Route path="galeria" element={<GaleriaScreen />} />
+          <Route path="promociones" element={<PromocionesScreen />} />
         </Route>
 
         {/* Catch all */}
