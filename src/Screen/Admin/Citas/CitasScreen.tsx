@@ -18,6 +18,7 @@ import {
 import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog";
 import { Toast } from "primereact/toast";
 import { toastShow } from "../../../Services/ToastService";
+import CitaCRUD from "./CitaCRUD";
 
 const CitasScreen = () => {
   const toast = useRef<Toast>(null!);
@@ -25,6 +26,13 @@ const CitasScreen = () => {
   const [citas, setCitas] = useState<any[]>([]);
   const [eventoSeleccionado, setEventoSeleccionado] = useState<any>(null);
   const [dialogVisible, setDialogVisible] = useState(false);
+  const [nuevaVisible, setNuevaVisible] = useState(false);
+  const [fechaNueva, setFechaNueva] = useState<Date | null>(null);
+
+  const nuevaCita = (fecha: Date | null = null) => {
+    setFechaNueva(fecha);
+    setNuevaVisible(true);
+  };
 
   const getInfo = async () => {
     setLoading(true);
@@ -179,11 +187,17 @@ const CitasScreen = () => {
       <PageHeader
         eyebrow="Agenda"
         title="Citas"
-        subtitle="Reservas hechas desde el sitio web."
+        subtitle="Reservas del sitio web y las que agregas aquí."
         actions={
-          <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={getInfo}>
-            <i className="pi pi-sync" />
-          </button>
+          <>
+            <button type="button" className="btn-icon" aria-label="Actualizar" title="Actualizar" onClick={getInfo}>
+              <i className="pi pi-sync" />
+            </button>
+            <button type="button" className="btn-primary" onClick={() => nuevaCita()}>
+              <i className="pi pi-plus" />
+              Nueva cita
+            </button>
+          </>
         }
       />
 
@@ -210,6 +224,15 @@ const CitasScreen = () => {
               nowIndicator={true}
               eventContent={renderizarEventoPersonalizado}
               eventClick={onEventoClick}
+              dateClick={(info) => {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                if (new Date(info.date.getFullYear(), info.date.getMonth(), info.date.getDate()) < hoy) {
+                  toastShow(toast, "warn", "Día pasado", "No se pueden agregar citas en días anteriores a hoy", 3000);
+                  return;
+                }
+                nuevaCita(info.date);
+              }}
             />
           </div>
 
@@ -217,7 +240,17 @@ const CitasScreen = () => {
           <div className="flex flex-col gap-3 sm:hidden">
             {citas.length === 0 && (
               <div className="card-soft">
-                <EmptyState icon="pi pi-calendar" title="Sin citas" text="Aún no hay reservas." />
+                <EmptyState
+                  icon="pi pi-calendar"
+                  title="Sin citas"
+                  text="Aún no hay reservas."
+                  action={
+                    <button type="button" className="btn-primary" onClick={() => nuevaCita()}>
+                      <i className="pi pi-plus" />
+                      Nueva cita
+                    </button>
+                  }
+                />
               </div>
             )}
             {citas.map((info) => (
@@ -262,6 +295,14 @@ const CitasScreen = () => {
           </div>
         </>
       )}
+
+      <CitaCRUD
+        visible={nuevaVisible}
+        onHide={() => setNuevaVisible(false)}
+        fechaInicial={fechaNueva}
+        citas={citas}
+        getInfo={getInfo}
+      />
 
       {/* Dialog con detalles de la cita */}
       <Dialog
